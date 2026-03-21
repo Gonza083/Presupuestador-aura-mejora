@@ -109,8 +109,10 @@ const ProductManagement = () => {
       productCount: categoryProducts?.length,
       products: categoryProducts?.map(p => ({
         id: p?.id,
+        category_id: p?.category_id,
         name: p?.name,
         code: p?.code,
+        description: p?.description,
         image: p?.image,
         alt: p?.alt,
         hasPDF: p?.has_pdf,
@@ -155,7 +157,7 @@ const ProductManagement = () => {
                 variant="ghost"
                 size="sm"
                 iconName="ArrowLeft"
-                onClick={() => navigate('/')}>
+                onClick={() => navigate('/landing-dashboard')}>
                 Inicio
               </Button>
               <div>

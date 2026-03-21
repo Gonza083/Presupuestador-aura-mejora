@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, title, message, itemName, loading }) => {
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, title, message, itemName, loading, error }) => {
   if (!isOpen) return null;
 
   return (
@@ -42,6 +42,12 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, title, message, itemNa
           <p className="text-sm text-muted-foreground mt-3">
             Esta acción no se puede deshacer.
           </p>
+          {error && (
+            <div className="mt-3 p-3 bg-error/10 border border-error/30 rounded-lg flex items-center gap-2">
+              <Icon name="AlertCircle" size={16} className="text-error flex-shrink-0" />
+              <p className="text-sm text-error">{error}</p>
+            </div>
+          )}
         </div>
 
         {/* Actions */}

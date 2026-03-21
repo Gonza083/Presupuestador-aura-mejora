@@ -19,6 +19,7 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
     profit: ''
   });
 
+  const [profitMode, setProfitMode] = useState('amount');
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -61,11 +62,18 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
     }
   };
 
+  const calculateProfit = () => {
+    const cost = parseFloat(formData?.cost) || 0;
+    const labor = parseFloat(formData?.labor) || 0;
+    const value = parseFloat(formData?.profit) || 0;
+    if (profitMode === 'percent') return (cost + labor) * value / 100;
+    return value;
+  };
+
   const calculateFinalPrice = () => {
     const cost = parseFloat(formData?.cost) || 0;
     const labor = parseFloat(formData?.labor) || 0;
-    const profit = parseFloat(formData?.profit) || 0;
-    return cost + labor + profit;
+    return cost + labor + calculateProfit();
   };
 
   const handleSubmit = async (e) => {
@@ -86,13 +94,14 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
         categoryId: formData?.category,
         name: formData?.name,
         code: formData?.code,
+        description: formData?.description || null,
         image: imageUrl,
         alt: `${formData?.name} product image`,
         hasPdf: !!formData?.pdfFile,
         finalPrice: finalPrice,
         cost: parseFloat(formData?.cost) || 0,
         labor: parseFloat(formData?.labor) || 0,
-        profit: parseFloat(formData?.profit) || 0
+        profit: calculateProfit()
       });
       
       // Reset form
@@ -406,11 +415,29 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Ganancia *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-medium text-foreground">Ganancia *</label>
+                  <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setProfitMode('amount')}
+                      className={`px-2 py-1 ${profitMode === 'amount' ? 'bg-accent text-white' : 'text-muted-foreground hover:bg-muted'}`}
+                    >
+                      $
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfitMode('percent')}
+                      className={`px-2 py-1 ${profitMode === 'percent' ? 'bg-accent text-white' : 'text-muted-foreground hover:bg-muted'}`}
+                    >
+                      %
+                    </button>
+                  </div>
+                </div>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    {profitMode === 'percent' ? '%' : '$'}
+                  </span>
                   <Input
                     type="number"
                     name="profit"
@@ -423,6 +450,11 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
                     required
                   />
                 </div>
+                {profitMode === 'percent' && formData?.profit && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    = ${calculateProfit().toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
 

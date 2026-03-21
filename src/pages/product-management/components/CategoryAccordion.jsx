@@ -13,6 +13,7 @@ const CategoryAccordion = ({ category, isExpanded, onToggle, searchQuery, allCat
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const filteredProducts = category?.products?.filter(product => {
     if (!searchQuery?.trim()) return true;
@@ -28,12 +29,13 @@ const CategoryAccordion = ({ category, isExpanded, onToggle, searchQuery, allCat
   const handleDeleteCategory = async () => {
     try {
       setDeleteLoading(true);
+      setDeleteError(null);
       await categoriesService?.delete(category?.id);
       setIsDeleteModalOpen(false);
       if (onDataChange) onDataChange();
     } catch (err) {
       console.error('Delete category error:', err);
-      alert('Error al eliminar la categoría: ' + (err?.message || 'Error desconocido'));
+      setDeleteError(err?.message || 'Error al eliminar la categoría');
     } finally {
       setDeleteLoading(false);
     }
@@ -143,12 +145,13 @@ const CategoryAccordion = ({ category, isExpanded, onToggle, searchQuery, allCat
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        onClose={() => { setIsDeleteModalOpen(false); setDeleteError(null); }}
         onConfirm={handleDeleteCategory}
         title="Eliminar Categoría"
         message="¿Estás seguro de que deseas eliminar esta categoría?"
         itemName={category?.name}
         loading={deleteLoading}
+        error={deleteError}
       />
     </div>
   );

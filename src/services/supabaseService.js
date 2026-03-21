@@ -266,6 +266,7 @@ export const productsService = {
         category_id: productData?.categoryId,
         name: productData?.name,
         code: productData?.code,
+        description: productData?.description || null,
         image: productData?.image || null,
         alt: productData?.alt || null,
         has_pdf: productData?.hasPdf || false,
@@ -295,6 +296,7 @@ export const productsService = {
       if (updates?.categoryId !== undefined) dbUpdates.category_id = updates?.categoryId;
       if (updates?.name !== undefined) dbUpdates.name = updates?.name;
       if (updates?.code !== undefined) dbUpdates.code = updates?.code;
+      if (updates?.description !== undefined) dbUpdates.description = updates?.description;
       if (updates?.image !== undefined) dbUpdates.image = updates?.image;
       if (updates?.alt !== undefined) dbUpdates.alt = updates?.alt;
       if (updates?.hasPdf !== undefined) dbUpdates.has_pdf = updates?.hasPdf;

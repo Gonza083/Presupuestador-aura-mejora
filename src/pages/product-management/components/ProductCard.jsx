@@ -5,12 +5,12 @@ import EditProductModal from './EditProductModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { productsService } from '../../../services/supabaseService';
 
-
 const ProductCard = ({ product, allCategories, onDataChange }) => {
   const [imageError, setImageError] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-AR', {
@@ -22,129 +22,132 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
   };
 
   const calculateMargin = () => {
-    const margin = ((product?.profit / product?.finalPrice) * 100)?.toFixed(1);
-    return `${margin}%`;
+    if (!product?.finalPrice) return '0.0';
+    return ((product?.profit / product?.finalPrice) * 100)?.toFixed(1);
   };
 
   const handleDeleteProduct = async () => {
     try {
       setDeleteLoading(true);
+      setDeleteError(null);
       await productsService?.delete(product?.id);
       setIsDeleteModalOpen(false);
       if (onDataChange) onDataChange();
     } catch (err) {
       console.error('Delete product error:', err);
-      alert('Error al eliminar el producto: ' + (err?.message || 'Error desconocido'));
+      setDeleteError(err?.message || 'Error al eliminar el producto');
     } finally {
       setDeleteLoading(false);
     }
   };
 
+  const hasImage = product?.image && !imageError;
+
   return (
     <>
-      <div className="bg-white rounded-lg border border-border shadow-sm hover:shadow-md transition-all duration-250 overflow-hidden group">
-        {/* Product Image */}
+      <div className="bg-white rounded-xl border border-border shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group flex flex-col">
+
+        {/* Image */}
         <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-          {!imageError ? (
+          {hasImage ? (
             <img
               src={product?.image}
               alt={product?.alt}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Icon name="ImageOff" size={48} className="text-muted-foreground" />
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted to-muted/50">
+              <Icon name="Package" size={36} className="text-muted-foreground/40" />
             </div>
           )}
-          
+
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+
           {/* PDF Badge */}
           {product?.hasPDF && (
             <div className="absolute top-2 left-2">
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-600 text-white text-xs font-medium rounded">
-                <Icon name="FileText" size={12} />
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-600/90 backdrop-blur-sm text-white text-xs font-medium rounded-md shadow-sm">
+                <Icon name="FileText" size={11} />
                 PDF
               </span>
             </div>
           )}
 
-          {/* Action Buttons (visible on hover) */}
-          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="secondary"
-              size="icon"
-              className="h-8 w-8 bg-white/90 hover:bg-white"
-              iconName="Edit2"
+          {/* Action buttons */}
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
+            <button
               onClick={() => setIsEditModalOpen(true)}
-            />
-            <Button
-              variant="secondary"
-              size="icon"
-              className="h-8 w-8 bg-white/90 hover:bg-white"
-              iconName="Trash2"
+              className="w-8 h-8 rounded-lg bg-white/95 shadow-sm flex items-center justify-center hover:bg-white transition-colors"
+              title="Editar"
+            >
+              <Icon name="Pencil" size={14} className="text-gray-600" />
+            </button>
+            <button
               onClick={() => setIsDeleteModalOpen(true)}
-            />
+              className="w-8 h-8 rounded-lg bg-white/95 shadow-sm flex items-center justify-center hover:bg-red-50 transition-colors"
+              title="Eliminar"
+            >
+              <Icon name="Trash2" size={14} className="text-red-500" />
+            </button>
           </div>
         </div>
 
-        {/* Product Info */}
-        <div className="p-4">
-          {/* Name and Code */}
-          <div className="mb-3">
-            <h4 className="text-base font-heading font-semibold text-foreground mb-1 line-clamp-2">
+        {/* Content */}
+        <div className="flex flex-col flex-1 p-4 gap-3">
+
+          {/* Name + code */}
+          <div>
+            <h4 className="font-semibold text-foreground leading-snug line-clamp-2 mb-1">
               {product?.name}
             </h4>
-            <p className="text-xs text-muted-foreground font-mono">
-              {product?.code}
+            {product?.code && (
+              <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                {product?.code}
+              </span>
+            )}
+          </div>
+
+          {/* Description */}
+          {product?.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {product?.description}
             </p>
-          </div>
+          )}
 
-          {/* Final Price */}
-          <div className="mb-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-heading font-bold text-black">
+          {/* Price + margin */}
+          <div className="flex items-end justify-between mt-auto pt-3 border-t border-border">
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Precio final</p>
+              <p className="text-xl font-bold text-foreground">
                 {formatCurrency(product?.finalPrice)}
-              </span>
-              <span className="text-xs text-success font-medium">
-                {calculateMargin()} ganancia
-              </span>
+              </p>
+            </div>
+            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+              {calculateMargin()}% margen
+            </span>
+          </div>
+
+          {/* Cost breakdown */}
+          <div className="grid grid-cols-3 gap-1 pt-2 border-t border-border/50">
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Costo</p>
+              <p className="text-xs font-medium text-foreground">{formatCurrency(product?.cost)}</p>
+            </div>
+            <div className="text-center border-x border-border/50">
+              <p className="text-xs text-muted-foreground">M.O.</p>
+              <p className="text-xs font-medium text-foreground">{formatCurrency(product?.labor)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Ganancia</p>
+              <p className="text-xs font-medium text-emerald-600">{formatCurrency(product?.profit)}</p>
             </div>
           </div>
 
-          {/* Cost Breakdown */}
-          <div className="space-y-2 pt-3 border-t border-border">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Icon name="DollarSign" size={14} />
-                Costo:
-              </span>
-              <span className="font-medium text-foreground">
-                {formatCurrency(product?.cost)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Icon name="Wrench" size={14} />
-                M.O.:
-              </span>
-              <span className="font-medium text-foreground">
-                {formatCurrency(product?.labor)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Icon name="TrendingUp" size={14} />
-                Ganancia:
-              </span>
-              <span className="font-medium text-black">
-                {formatCurrency(product?.profit)}
-              </span>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Edit Product Modal */}
       <EditProductModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -153,15 +156,15 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
         onSuccess={onDataChange}
       />
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        onClose={() => { setIsDeleteModalOpen(false); setDeleteError(null); }}
         onConfirm={handleDeleteProduct}
         title="Eliminar Producto"
         message="¿Estás seguro de que deseas eliminar este producto?"
         itemName={product?.name}
         loading={deleteLoading}
+        error={deleteError}
       />
     </>
   );

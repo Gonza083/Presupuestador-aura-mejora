@@ -10,6 +10,7 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
     name: '',
     category: null,
     code: '',
+    description: '',
     cost: '',
     labor: '',
     profit: ''
@@ -17,17 +18,19 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState(null);
+  const [profitMode, setProfitMode] = useState('amount');
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Update form when product changes
+  // Update form when modal opens
   useEffect(() => {
-    if (product) {
+    if (isOpen && product) {
       setFormData({
         name: product?.name || '',
         category: product?.category_id || null,
         code: product?.code || '',
+        description: product?.description || '',
         cost: product?.cost?.toString() || '',
         labor: product?.labor?.toString() || '',
         profit: product?.profit?.toString() || ''
@@ -35,8 +38,10 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
       setCurrentImageUrl(product?.image || null);
       setNewImageFile(null);
       setNewImagePreview(null);
+      setProfitMode('amount');
+      setError(null);
     }
-  }, [product]);
+  }, [isOpen, product]);
 
   if (!isOpen) return null;
 
@@ -45,11 +50,18 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const calculateProfit = () => {
+    const cost = parseFloat(formData?.cost) || 0;
+    const labor = parseFloat(formData?.labor) || 0;
+    const value = parseFloat(formData?.profit) || 0;
+    if (profitMode === 'percent') return (cost + labor) * value / 100;
+    return value;
+  };
+
   const calculateFinalPrice = () => {
     const cost = parseFloat(formData?.cost) || 0;
     const labor = parseFloat(formData?.labor) || 0;
-    const profit = parseFloat(formData?.profit) || 0;
-    return cost + labor + profit;
+    return cost + labor + calculateProfit();
   };
 
   const handleImageFile = (file) => {
@@ -105,12 +117,13 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
         categoryId: formData?.category,
         name: formData?.name?.trim(),
         code: formData?.code?.trim() || '',
+        description: formData?.description?.trim() || null,
         image: imageUrl,
         alt: `${formData?.name?.trim()} product image`,
         finalPrice: finalPrice,
         cost: parseFloat(formData?.cost) || 0,
         labor: parseFloat(formData?.labor) || 0,
-        profit: parseFloat(formData?.profit) || 0
+        profit: calculateProfit()
       };
 
       const result = await productsService?.update(product?.id, updateData);
@@ -232,6 +245,21 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Descripción breve
+                </label>
+                <textarea
+                  name="description"
+                  value={formData?.description}
+                  onChange={handleInputChange}
+                  placeholder="Descripción opcional del producto..."
+                  rows={3}
+                  disabled={loading}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none text-sm"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Imagen del producto
                 </label>
                 <div
@@ -334,19 +362,46 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Ganancia
-                </label>
-                <Input
-                  type="number"
-                  name="profit"
-                  value={formData?.profit}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  disabled={loading}
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-medium text-foreground">Ganancia</label>
+                  <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setProfitMode('amount')}
+                      className={`px-2 py-1 ${profitMode === 'amount' ? 'bg-accent text-white' : 'text-muted-foreground hover:bg-muted'}`}
+                    >
+                      $
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfitMode('percent')}
+                      className={`px-2 py-1 ${profitMode === 'percent' ? 'bg-accent text-white' : 'text-muted-foreground hover:bg-muted'}`}
+                    >
+                      %
+                    </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    {profitMode === 'percent' ? '%' : '$'}
+                  </span>
+                  <Input
+                    type="number"
+                    name="profit"
+                    value={formData?.profit}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    disabled={loading}
+                    className="pl-7"
+                  />
+                </div>
+                {profitMode === 'percent' && formData?.profit && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    = ${calculateProfit().toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
 
