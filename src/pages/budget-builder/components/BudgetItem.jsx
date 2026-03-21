@@ -115,7 +115,7 @@ const BudgetItem = ({ item, viewMode, onUpdateQuantity, onRemove }) => {
 
             {/* Subtotal */}
             <div className="text-right">
-              <div className="text-sm font-heading font-bold text-accent">
+              <div className="text-sm font-heading font-bold text-black">
                 {formatCurrency(subtotal)}
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext({});
@@ -15,6 +15,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const isSigningOutRef = useRef(false);
 
   useEffect(() => {
     // Get initial session
@@ -25,10 +27,17 @@ export const AuthProvider = ({ children }) => {
       } else {
         setLoading(false);
       }
+    }).catch((error) => {
+      console.error('Error getting session:', error?.message);
+      setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase?.auth?.onAuthStateChange((_event, session) => {
+      if (_event === 'SIGNED_OUT' && !isSigningOutRef.current) {
+        setSessionExpired(true);
+      }
+      isSigningOutRef.current = false;
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session?.user?.id);
@@ -90,10 +99,12 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      isSigningOutRef.current = true;
       const { error } = await supabase?.auth?.signOut();
       if (error) throw error;
       setUser(null);
       setProfile(null);
+      setSessionExpired(false);
     } catch (error) {
       console.error('Error signing out:', error?.message);
     }
@@ -107,6 +118,7 @@ export const AuthProvider = ({ children }) => {
     user,
     profile,
     loading,
+    sessionExpired,
     signUp,
     signIn,
     signOut,

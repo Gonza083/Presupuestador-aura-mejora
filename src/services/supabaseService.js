@@ -682,6 +682,7 @@ export const lineItemsService = {
 
         return {
           project_id: projectId,
+          product_id: item?.productId || null,
           category: item?.category || 'General',
           name: item?.name || 'Producto sin nombre',
           quantity: Number(item?.quantity) || 1,
@@ -691,7 +692,6 @@ export const lineItemsService = {
         };
       });
 
-      console.log('Saving items:', dbItems); // Debug log
 
       const { data, error: insertError } = await supabase?.from('line_items')?.insert(dbItems)?.select();
 

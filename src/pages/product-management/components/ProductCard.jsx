@@ -102,7 +102,7 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
           {/* Final Price */}
           <div className="mb-4">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-heading font-bold text-accent">
+              <span className="text-2xl font-heading font-bold text-black">
                 {formatCurrency(product?.finalPrice)}
               </span>
               <span className="text-xs text-success font-medium">
@@ -136,7 +136,7 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
                 <Icon name="TrendingUp" size={14} />
                 Ganancia:
               </span>
-              <span className="font-medium text-success">
+              <span className="font-medium text-black">
                 {formatCurrency(product?.profit)}
               </span>
             </div>

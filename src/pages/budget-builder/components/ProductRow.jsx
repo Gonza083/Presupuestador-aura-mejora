@@ -71,7 +71,7 @@ const ProductRow = ({ product, addedCount, onAddToBudget }) => {
 
         {/* Price */}
         <div className="flex-shrink-0 text-right">
-          <div className="text-lg font-heading font-bold text-accent">
+          <div className="text-lg font-heading font-bold text-black">
             {formatCurrency(product?.final_price || 0)}
           </div>
         </div>

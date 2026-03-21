@@ -18,6 +18,7 @@ const TrashManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   // Fetch deleted items
   useEffect(() => {
@@ -82,7 +83,8 @@ const TrashManagement = () => {
   const handleRestore = async (type, item) => {
     try {
       setActionLoading(true);
-      
+      setActionError(null);
+
       if (type === 'product') {
         await productsService?.restore(item?.id);
         setDeletedProducts(prev => prev?.filter(p => p?.id !== item?.id));
@@ -95,7 +97,7 @@ const TrashManagement = () => {
       await fetchDeletedItems();
     } catch (err) {
       console.error('Error restoring item:', err);
-      alert(err?.message || 'Error al restaurar el elemento');
+      setActionError(err?.message || 'Error al restaurar el elemento');
     } finally {
       setActionLoading(false);
     }
@@ -124,7 +126,7 @@ const TrashManagement = () => {
       await fetchDeletedItems();
     } catch (err) {
       console.error('Error deleting permanently:', err);
-      alert(err?.message || 'Error al eliminar permanentemente');
+      setActionError(err?.message || 'Error al eliminar permanentemente');
     } finally {
       setActionLoading(false);
     }
@@ -147,7 +149,7 @@ const TrashManagement = () => {
       await fetchDeletedItems();
     } catch (err) {
       console.error('Error emptying trash:', err);
-      alert(err?.message || 'Error al vaciar la papelera');
+      setActionError(err?.message || 'Error al vaciar la papelera');
     } finally {
       setActionLoading(false);
     }
@@ -242,6 +244,17 @@ const TrashManagement = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {actionError && (
+          <div className="mb-6 p-4 bg-error/10 border border-error/30 rounded-lg flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Icon name="AlertCircle" size={20} className="text-error flex-shrink-0" />
+              <p className="text-sm text-error">{actionError}</p>
+            </div>
+            <button onClick={() => setActionError(null)} className="text-error hover:opacity-70">
+              <Icon name="X" size={16} />
+            </button>
+          </div>
+        )}
         {hasItems ? (
           <>
             {/* Tabs */}

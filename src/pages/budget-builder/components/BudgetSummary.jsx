@@ -320,7 +320,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
               <span className="text-lg font-heading font-semibold text-foreground">
                 TOTAL FINAL
               </span>
-              <span className="text-2xl font-heading font-bold text-accent">
+              <span className="text-2xl font-heading font-bold text-black">
                 {formatCurrency(grandTotal)}
               </span>
             </div>

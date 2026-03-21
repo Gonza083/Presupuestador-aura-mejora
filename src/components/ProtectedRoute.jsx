@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isEmailVerified()) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to="/signin" replace state={{ message: 'Debés verificar tu email antes de continuar. Revisá tu bandeja de entrada.' }} />;
   }
 
   return children;

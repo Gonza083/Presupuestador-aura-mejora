@@ -8,11 +8,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: 'var(--color-border)', /* slate-200 */
-        input: 'var(--color-input)', /* slate-200 */
-        ring: 'var(--color-ring)', /* orange-600 */
-        background: 'var(--color-background)', /* white */
-        foreground: 'var(--color-foreground)', /* slate-800 */
+        // Aura brand colors — uso directo como utilidades
+        'aura-brown': '#3D2B1F',
+        'aura-tan': '#C4956A',
+        'aura-cream': '#FDF6EC',
+        'aura-black': '#1A1008',
+        'aura-tan-light': '#E8D0B0',
+
+        border: 'var(--color-border)',
+        input: 'var(--color-input)',
+        ring: 'var(--color-ring)',
+        background: 'var(--color-background)',
+        foreground: 'var(--color-foreground)',
         primary: {
           DEFAULT: 'var(--color-primary)', /* slate-800 */
           foreground: 'var(--color-primary-foreground)', /* slate-50 */
@@ -67,10 +74,10 @@ module.exports = {
         xl: 'var(--shadow-xl)',
       },
       fontFamily: {
-        heading: ['Outfit', 'sans-serif'],
-        body: ['Source Sans 3', 'sans-serif'],
+        heading: ['Inter', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
         caption: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        mono: ['Inter', 'sans-serif'],
       },
       spacing: {
         '18': '4.5rem',

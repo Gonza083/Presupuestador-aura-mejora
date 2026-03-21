@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/Paula/Desktop/Projectos-claude/gestion-presupuestos-aura/Presupuestador-aura-mejora -type d -not -path */.* -not -path */node_modules/*)",
+      "Bash(supabase --version)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:www.aurahogar.com)"
+    ]
+  }
+}

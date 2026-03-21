@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import ProductCatalog from './components/ProductCatalog';
 import BudgetSummary from './components/BudgetSummary';
 import { productsService, categoriesService, projectsService, lineItemsService, subscribeToProducts, unsubscribeChannel } from '../../services/supabaseService';
-import { useParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const BudgetBuilder = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [budgetItems, setBudgetItems] = useState([]);
@@ -26,7 +27,9 @@ const BudgetBuilder = () => {
 
   // Real-time subscription for products
   useEffect(() => {
-    const subscription = subscribeToProducts((payload) => {
+    if (!user?.id) return;
+
+    const subscription = subscribeToProducts(user?.id, (payload) => {
       if (payload?.eventType === 'INSERT') {
         loadProductsAndCategories();
       } else if (payload?.eventType === 'UPDATE') {
@@ -41,7 +44,7 @@ const BudgetBuilder = () => {
     return () => {
       unsubscribeChannel(subscription);
     };
-  }, []);
+  }, [user?.id]);
 
   const loadProductsAndCategories = async () => {
     const [productsData, categoriesData] = await Promise.all([
@@ -90,13 +93,16 @@ const BudgetBuilder = () => {
             const unitPrice = cost * (1 + markup / 100);
             const profit = unitPrice - cost;
 
+            const linkedProduct = item?.product_id
+              ? productsData?.find(p => p?.id === item?.product_id)
+              : productsData?.find(p => p?.name === item?.name);
+
             return {
               id: item?.id,
-              productId: null, // Lost reference
+              productId: item?.product_id || null,
               name: item?.name,
               category: item?.category,
-              // Try to find an image from products if name matches exact
-              image: productsData?.find(p => p?.name === item?.name)?.image || null,
+              image: linkedProduct?.image || null,
               unitPrice: unitPrice,
               cost: cost,
               labor: labor,
