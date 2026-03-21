@@ -3,19 +3,21 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
-import { productsService } from '../../../services/supabaseService';
+import { productsService, uploadProductImage } from '../../../services/supabaseService';
 
 const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: null,
     code: '',
-    image: '',
     cost: '',
     labor: '',
     profit: ''
   });
-
+  const [currentImageUrl, setCurrentImageUrl] = useState(null);
+  const [newImageFile, setNewImageFile] = useState(null);
+  const [newImagePreview, setNewImagePreview] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -26,11 +28,13 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
         name: product?.name || '',
         category: product?.category_id || null,
         code: product?.code || '',
-        image: product?.image || '',
         cost: product?.cost?.toString() || '',
         labor: product?.labor?.toString() || '',
         profit: product?.profit?.toString() || ''
       });
+      setCurrentImageUrl(product?.image || null);
+      setNewImageFile(null);
+      setNewImagePreview(null);
     }
   }, [product]);
 
@@ -48,53 +52,73 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
     return cost + labor + profit;
   };
 
+  const handleImageFile = (file) => {
+    setNewImageFile(file);
+    setNewImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e?.target?.files?.[0];
+    if (file) handleImageFile(file);
+  };
+
+  const handleImageDrop = (e) => {
+    e?.preventDefault();
+    setIsDragging(false);
+    const file = e?.dataTransfer?.files?.[0];
+    if (file && file?.type?.startsWith('image/')) handleImageFile(file);
+  };
+
+  const handleRemoveImage = () => {
+    setNewImageFile(null);
+    setNewImagePreview(null);
+    setCurrentImageUrl(null);
+  };
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    
+
     try {
       setLoading(true);
       setError(null);
-      
-      // Validate required fields
+
       if (!formData?.name?.trim()) {
         setError('El nombre del producto es requerido');
         setLoading(false);
         return;
       }
-      
-      // CRITICAL: Validate category is selected
+
       if (!formData?.category) {
         setError('La categoría es requerida. Por favor selecciona una categoría.');
         setLoading(false);
         return;
       }
-      
+
       const finalPrice = calculateFinalPrice();
-      
-      // Prepare update data - category is now guaranteed to be set
+
+      let imageUrl = currentImageUrl;
+      if (newImageFile) {
+        imageUrl = await uploadProductImage(newImageFile);
+      }
+
       const updateData = {
         categoryId: formData?.category,
         name: formData?.name?.trim(),
         code: formData?.code?.trim() || '',
-        image: formData?.image?.trim() || null,
+        image: imageUrl,
         alt: `${formData?.name?.trim()} product image`,
         finalPrice: finalPrice,
         cost: parseFloat(formData?.cost) || 0,
         labor: parseFloat(formData?.labor) || 0,
         profit: parseFloat(formData?.profit) || 0
       };
-      
-      console.log('Updating product:', product?.id, updateData);
-      
+
       const result = await productsService?.update(product?.id, updateData);
-      
+
       if (!result) {
         throw new Error('No se pudo actualizar el producto');
       }
-      
-      console.log('Product updated successfully:', result);
-      
-      // Notify parent and close
+
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
@@ -208,16 +232,61 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  URL de Imagen
+                  Imagen del producto
                 </label>
-                <Input
-                  type="text"
-                  name="image"
-                  value={formData?.image}
-                  onChange={handleInputChange}
-                  placeholder="https://..."
-                  disabled={loading}
-                />
+                <div
+                  className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                    isDragging ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
+                  }`}
+                  onDragOver={(e) => { e?.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleImageDrop}
+                >
+                  {newImagePreview || currentImageUrl ? (
+                    <div className="space-y-3">
+                      <img
+                        src={newImagePreview || currentImageUrl}
+                        alt="Preview"
+                        className="max-h-40 mx-auto rounded-lg object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        iconName="Trash2"
+                        onClick={handleRemoveImage}
+                        disabled={loading}
+                      >
+                        Quitar imagen
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <Icon name="Upload" size={36} className="mx-auto text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Arrastrá una imagen o hacé clic para subir
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        id="edit-image-upload"
+                        disabled={loading}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        iconName="Upload"
+                        onClick={() => document.getElementById('edit-image-upload')?.click()}
+                        disabled={loading}
+                      >
+                        Seleccionar archivo
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

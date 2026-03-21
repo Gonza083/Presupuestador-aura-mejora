@@ -3,7 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
-import { productsService } from '../../../services/supabaseService';
+import { productsService, uploadProductImage } from '../../../services/supabaseService';
 
 const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -70,18 +70,23 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const finalPrice = calculateFinalPrice();
-      
+
+      let imageUrl = null;
+      if (formData?.image) {
+        imageUrl = await uploadProductImage(formData.image);
+      }
+
       await productsService?.create({
         categoryId: formData?.category,
         name: formData?.name,
         code: formData?.code,
-        image: formData?.imagePreview || 'https://img.rocket.new/generatedImages/rocket_gen_img_1e3b7e4f7-1765090734789.png',
+        image: imageUrl,
         alt: `${formData?.name} product image`,
         hasPdf: !!formData?.pdfFile,
         finalPrice: finalPrice,

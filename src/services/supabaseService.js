@@ -981,6 +981,28 @@ export const milestoneTasksService = {
 };
 
 // =====================================================
+// STORAGE SERVICE
+// =====================================================
+
+export async function uploadProductImage(file) {
+  const user = await getAuthenticatedUser();
+  const ext = file.name.split('.').pop();
+  const filename = `${user.id}/${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from('product-images')
+    .upload(filename, file);
+
+  if (error) throw error;
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(filename);
+
+  return publicUrl;
+}
+
+// =====================================================
 // REAL-TIME SUBSCRIPTIONS
 // =====================================================
 
