@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, LogIn, AlertCircle, Info } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Info } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -43,15 +43,17 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-stone-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-              <LogIn className="w-8 h-8 text-indigo-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Iniciar Sesión</h1>
-            <p className="text-gray-600">Accede a tu cuenta de gestión de proyectos</p>
+            <img
+              src="/assets/Varios/PHOTO-2025-02-18-11-28-19 (3).jpg"
+              alt="Aura Hogar"
+              className="h-32 w-auto mx-auto mb-4 object-contain"
+            />
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Iniciar Sesión</h1>
+            <p className="text-gray-500 text-sm">Accedé a tu cuenta</p>
           </div>
 
           {infoMessage && (
@@ -146,7 +148,7 @@ const SignIn = () => {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             ¿No tienes cuenta?{' '}
-            <Link to="/signup" className="text-indigo-600 hover:text-indigo-700 font-medium">
+            <Link to="/signup" className="text-amber-700 hover:text-amber-800 font-medium">
               Regístrate aquí
             </Link>
           </p>

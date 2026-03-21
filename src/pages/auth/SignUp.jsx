@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, User, UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -51,15 +51,17 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-stone-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-              <UserPlus className="w-8 h-8 text-indigo-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Crear Cuenta</h1>
-            <p className="text-gray-600">Regístrate para gestionar tus proyectos</p>
+            <img
+              src="/assets/Varios/PHOTO-2025-02-18-11-28-19 (3).jpg"
+              alt="Aura Hogar"
+              className="h-32 w-auto mx-auto mb-4 object-contain"
+            />
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Crear Cuenta</h1>
+            <p className="text-gray-500 text-sm">Registrate para gestionar tus proyectos</p>
           </div>
 
           {error && (
@@ -159,7 +161,7 @@ const SignUp = () => {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             ¿Ya tienes cuenta?{' '}
-            <Link to="/signin" className="text-indigo-600 hover:text-indigo-700 font-medium">
+            <Link to="/signin" className="text-amber-700 hover:text-amber-800 font-medium">
               Inicia sesión aquí
             </Link>
           </p>
