@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import ProjectCard from './components/ProjectCard';
 import { projectsService, subscribeToProjects, unsubscribeChannel } from '../../services/supabaseService';
 import { useAuth } from '../../contexts/AuthContext';
+import DeleteConfirmModal from '../product-management/components/DeleteConfirmModal';
 
 const ProjectsMain = () => {
   const navigate = useNavigate();
@@ -12,6 +15,8 @@ const ProjectsMain = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ open: false, projectId: null, projectName: '', loading: false, error: null });
+  const [createModal, setCreateModal] = useState({ open: false, name: '', loading: false, error: null });
 
   // Load projects on mount
   useEffect(() => {
@@ -72,20 +77,28 @@ const ProjectsMain = () => {
     })?.format(date);
   };
 
-  const handleCreateProject = async () => {
+  const handleCreateProject = () => {
+    setCreateModal({ open: true, name: '', loading: false, error: null });
+  };
+
+  const confirmCreateProject = async () => {
+    if (!createModal.name.trim()) {
+      setCreateModal(prev => ({ ...prev, error: 'El nombre del proyecto es requerido' }));
+      return;
+    }
+    setCreateModal(prev => ({ ...prev, loading: true, error: null }));
     try {
       const newProject = await projectsService?.create({
-        name: 'Nuevo Proyecto',
-        description: 'Descripción del proyecto',
+        name: createModal.name.trim(),
         status: 'active'
       });
-
       if (newProject) {
+        setCreateModal({ open: false, name: '', loading: false, error: null });
         navigate(`/project-detail-editor/${newProject?.id}`);
       }
     } catch (err) {
       console.error('Create project error:', err);
-      setError(err?.message || 'Error al crear el proyecto');
+      setCreateModal(prev => ({ ...prev, loading: false, error: err?.message || 'Error al crear el proyecto' }));
     }
   };
 
@@ -121,15 +134,20 @@ const ProjectsMain = () => {
     }
   };
 
-  const handleDeleteProject = async (projectId) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
-      try {
-        await projectsService?.delete(projectId);
-        await loadProjects();
-      } catch (err) {
-        console.error('Delete project error:', err);
-        setError(err?.message || 'Error al eliminar el proyecto');
-      }
+  const handleDeleteProject = (projectId) => {
+    const project = projects?.find(p => p?.id === projectId);
+    setDeleteModal({ open: true, projectId, projectName: project?.name || '', loading: false, error: null });
+  };
+
+  const confirmDeleteProject = async () => {
+    setDeleteModal(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      await projectsService?.delete(deleteModal.projectId);
+      setDeleteModal({ open: false, projectId: null, projectName: '', loading: false, error: null });
+      await loadProjects();
+    } catch (err) {
+      console.error('Delete project error:', err);
+      setDeleteModal(prev => ({ ...prev, loading: false, error: err?.message || 'Error al eliminar el proyecto' }));
     }
   };
 
@@ -145,13 +163,14 @@ const ProjectsMain = () => {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-white border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* Back Button */}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/landing-dashboard')}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 group"
           >
             <Icon name="ArrowLeft" size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -271,6 +290,54 @@ const ProjectsMain = () => {
         </div>
       </div>
     </div>
+
+    {createModal.open && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setCreateModal({ open: false, name: '', loading: false, error: null })} />
+        <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <h2 className="text-xl font-heading font-semibold text-foreground mb-1">Nuevo Proyecto</h2>
+          <p className="text-sm text-muted-foreground mb-5">Ingresá el nombre para continuar</p>
+
+          {createModal.error && (
+            <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-lg flex items-center gap-2">
+              <Icon name="AlertCircle" size={16} className="text-error flex-shrink-0" />
+              <p className="text-sm text-error">{createModal.error}</p>
+            </div>
+          )}
+
+          <Input
+            type="text"
+            placeholder="Ej: Instalación Domótica Villa Norte"
+            value={createModal.name}
+            onChange={(e) => setCreateModal(prev => ({ ...prev, name: e.target.value }))}
+            onKeyDown={(e) => e.key === 'Enter' && confirmCreateProject()}
+            autoFocus
+            disabled={createModal.loading}
+          />
+
+          <div className="flex justify-end gap-3 mt-5">
+            <Button variant="outline" onClick={() => setCreateModal({ open: false, name: '', loading: false, error: null })} disabled={createModal.loading}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmCreateProject} disabled={createModal.loading} iconName={createModal.loading ? 'Loader2' : 'Plus'}>
+              {createModal.loading ? 'Creando...' : 'Crear Proyecto'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <DeleteConfirmModal
+      isOpen={deleteModal.open}
+      onClose={() => setDeleteModal({ open: false, projectId: null, projectName: '', loading: false, error: null })}
+      onConfirm={confirmDeleteProject}
+      title="Eliminar Proyecto"
+      message="¿Estás seguro de que deseas eliminar este proyecto?"
+      itemName={deleteModal.projectName}
+      loading={deleteModal.loading}
+      error={deleteModal.error}
+    />
+    </>
   );
 };
 
