@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
-import Button from '../../../components/ui/Button';
 
 const ProductRow = ({ product, addedCount, onAddToBudget }) => {
   const [imageError, setImageError] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [lightbox, setLightbox] = useState(false);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-AR', {
@@ -15,114 +14,94 @@ const ProductRow = ({ product, addedCount, onAddToBudget }) => {
     })?.format(amount);
   };
 
-  const handleIncrement = () => {
-    setQuantity(prev => prev + 1);
-  };
-
-  const handleDecrement = () => {
-    if (quantity > 1) {
-      setQuantity(prev => prev - 1);
-    }
-  };
-
-  const handleQuantityChange = (e) => {
-    const value = parseInt(e?.target?.value) || 1;
-    setQuantity(Math.max(1, value));
-  };
-
-  const handleAdd = () => {
-    onAddToBudget(product, quantity);
-    setQuantity(1);
-  };
-
   return (
-    <div className="p-4 hover:bg-muted/30 transition-colors">
-      <div className="flex items-center gap-4">
-        {/* Product Image */}
-        <div className="flex-shrink-0 w-16 h-16 bg-muted rounded-lg overflow-hidden">
-          {!imageError ? (
+    <>
+    <div
+      onClick={() => onAddToBudget(product, 1)}
+      className={`relative flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer group transition-all duration-200 hover:shadow-md hover:border-accent ${
+        addedCount > 0 ? 'border-accent bg-accent/5' : 'border-border bg-white'
+      }`}
+    >
+      {/* Added badge */}
+      {addedCount > 0 && (
+        <div className="absolute -top-2 -right-2 z-10 w-5 h-5 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center shadow">
+          {addedCount}
+        </div>
+      )}
+
+      {/* Image */}
+      <div
+        className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-white border border-border flex items-center justify-center p-1 relative"
+        onClick={(e) => {
+          if (!imageError && product?.image) {
+            e.stopPropagation();
+            setLightbox(true);
+          }
+        }}
+      >
+        {!imageError && product?.image ? (
+          <>
             <img
-              src={product?.image}
+              src={product.image}
               alt={product?.alt || product?.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               onError={() => setImageError(true)}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Icon name="ImageOff" size={24} className="text-muted-foreground" />
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center">
+              <Icon name="ZoomIn" size={16} className="text-white opacity-0 group-hover:opacity-100 drop-shadow transition-opacity" />
             </div>
-          )}
-        </div>
-
-        {/* Product Info */}
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-heading font-semibold text-foreground truncate">
-            {product?.name}
-          </h4>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">
-            {product?.code}
-          </p>
-          {product?.categories?.name && (
-            <span className="inline-block mt-1 px-2 py-0.5 bg-muted rounded text-xs text-muted-foreground">
-              {product?.categories?.name}
-            </span>
-          )}
-        </div>
-
-        {/* Price */}
-        <div className="flex-shrink-0 text-right">
-          <div className="text-lg font-heading font-bold text-black">
-            {formatCurrency(product?.final_price || 0)}
-          </div>
-        </div>
-
-        {/* Quantity Controls */}
-        <div className="flex-shrink-0 flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleDecrement}
-            disabled={quantity <= 1}
-          >
-            <Icon name="Minus" size={14} />
-          </Button>
-          <input
-            type="number"
-            value={quantity}
-            onChange={handleQuantityChange}
-            className="w-16 h-8 text-center border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            min="1"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleIncrement}
-          >
-            <Icon name="Plus" size={14} />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleAdd}
-            className="ml-2"
-          >
-            Agregar
-          </Button>
-        </div>
-
-        {/* Added Indicator */}
-        {addedCount > 0 && (
-          <div className="flex-shrink-0">
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded-full text-xs font-medium">
-              <Icon name="Check" size={12} />
-              {addedCount} añadidos
-            </span>
-          </div>
+          </>
+        ) : (
+          <Icon name="Package" size={22} className="text-muted-foreground" />
         )}
       </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm font-semibold text-foreground leading-tight line-clamp-2 group-hover:text-accent transition-colors">
+          {product?.name}
+        </h4>
+        {product?.description && (
+          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5 leading-tight">
+            {product.description}
+          </p>
+        )}
+        <span className="text-sm font-bold text-accent mt-1 block">
+          {formatCurrency(product?.final_price || 0)}
+        </span>
+      </div>
+
+      {/* Add button */}
+      <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-accent/10 group-hover:bg-accent flex items-center justify-center transition-colors">
+        <Icon name="Plus" size={14} className="text-accent group-hover:text-white transition-colors" />
+      </div>
     </div>
+
+    {/* Lightbox */}
+    {lightbox && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+        onClick={() => setLightbox(false)}
+      >
+        <div className="relative max-w-lg w-full mx-4" onClick={(e) => e.stopPropagation()}>
+          <img
+            src={product.image}
+            alt={product?.alt || product?.name}
+            className="w-full max-h-[70vh] object-contain rounded-xl shadow-2xl bg-white p-4"
+          />
+          <p className="text-white text-center text-sm font-medium mt-3 drop-shadow">
+            {product?.name}
+          </p>
+          <button
+            onClick={() => setLightbox(false)}
+            className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg hover:bg-muted transition-colors"
+          >
+            <Icon name="X" size={15} className="text-foreground" />
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

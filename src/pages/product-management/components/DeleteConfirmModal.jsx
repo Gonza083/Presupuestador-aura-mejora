@@ -34,11 +34,13 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, title, message, itemNa
 
         {/* Content */}
         <div className="px-6 py-4">
-          <div className="bg-muted/50 rounded-lg p-3 border border-border">
-            <p className="text-sm text-foreground font-medium">
-              {itemName}
-            </p>
-          </div>
+          {itemName && (
+            <div className="bg-muted/50 rounded-lg p-3 border border-border">
+              <p className="text-sm text-foreground font-medium">
+                {itemName}
+              </p>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground mt-3">
             Esta acción no se puede deshacer.
           </p>

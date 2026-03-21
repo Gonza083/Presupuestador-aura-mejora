@@ -3,7 +3,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-import Input from '../../../components/ui/Input';
 import BudgetItem from './BudgetItem';
 
 const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, initialDiscount = 0, project }) => {
@@ -11,9 +10,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
   const [discount, setDiscount] = useState(initialDiscount);
 
   useEffect(() => {
-    if (initialDiscount) {
-      setDiscount(initialDiscount);
-    }
+    if (initialDiscount) setDiscount(initialDiscount);
   }, [initialDiscount]);
 
   const formatCurrency = (amount) => {
@@ -25,72 +22,35 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
     })?.format(amount);
   };
 
-  // Calculate totals
-  const subtotal = budgetItems?.reduce((sum, item) => {
-    return sum + (item?.unitPrice * item?.quantity);
-  }, 0);
-
-  const totalCosts = budgetItems?.reduce((sum, item) => {
-    return sum + (item?.cost * item?.quantity);
-  }, 0);
-
-  const totalLabor = budgetItems?.reduce((sum, item) => {
-    return sum + (item?.labor * item?.quantity);
-  }, 0);
-
-  const totalProfit = budgetItems?.reduce((sum, item) => {
-    return sum + (item?.profit * item?.quantity);
-  }, 0);
-
+  const subtotal = budgetItems?.reduce((sum, item) => sum + (item?.unitPrice * item?.quantity), 0);
+  const totalCosts = budgetItems?.reduce((sum, item) => sum + (item?.cost * item?.quantity), 0);
+  const totalLabor = budgetItems?.reduce((sum, item) => sum + (item?.labor * item?.quantity), 0);
+  const totalProfit = budgetItems?.reduce((sum, item) => sum + (item?.profit * item?.quantity), 0);
   const discountAmount = (subtotal * discount) / 100;
   const grandTotal = subtotal - discountAmount;
   const profitMargin = subtotal > 0 ? ((totalProfit / subtotal) * 100)?.toFixed(1) : 0;
 
-  // Import libraries dynamically or at top if possible. Since this is React, top-level import is better, 
-  // but if we want to avoid import errors if install failed, we can use require inside or just import at top.
-  // Let's assume imports will be added at the top. Here we implement the logic.
-
-  // Standard handleExportPDF implementation using top-level imports
-
   const handleExportPDF = () => {
     const doc = new jsPDF();
-
-    // Project/Company Info
     doc.setFontSize(22);
-    doc.setTextColor(201, 169, 110); // Aura gold
+    doc.setTextColor(201, 169, 110);
     doc.text("Presupuesto", 14, 20);
-
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text("Aura Hogar", 14, 28);
     doc.text(`Fecha: ${budgetDate || new Date().toLocaleDateString()}`, 14, 34);
-    if (project?.client) {
-      doc.text(`Cliente: ${project.client}`, 14, 40);
-    }
-    if (project?.name) {
-      doc.text(`Proyecto: ${project.name}`, 14, 46);
-    }
+    if (project?.client) doc.text(`Cliente: ${project.client}`, 14, 40);
+    if (project?.name) doc.text(`Proyecto: ${project.name}`, 14, 46);
 
-    // Table Data
     const tableColumn = ["Producto", "Categoría", "Cant.", "Precio Unit.", "Total"];
-    const tableRows = [];
+    const tableRows = budgetItems.map(item => [
+      item.name,
+      item.category || '-',
+      item.quantity,
+      new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.unitPrice),
+      new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.unitPrice * item.quantity)
+    ]);
 
-    budgetItems.forEach(item => {
-      const itemTotal = item.unitPrice * item.quantity;
-      const price = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.unitPrice);
-      const total = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(itemTotal);
-
-      const itemData = [
-        item.name,
-        item.category || '-',
-        item.quantity,
-        price,
-        total
-      ];
-      tableRows.push(itemData);
-    });
-
-    // Generate Table
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
@@ -101,40 +61,28 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
       alternateRowStyles: { fillColor: [252, 248, 240] }
     });
 
-    // Totals
     const finalY = doc.lastAutoTable.finalY + 10;
-
+    const textX = 140;
     doc.setFontSize(10);
     doc.setTextColor(0);
-
-    // Align to right approximately (A4 width is ~210mm)
-    const textX = 140;
-
     doc.text(`Subtotal: ${formatCurrency(subtotal)}`, textX, finalY);
     doc.text(`Descuento (${discount}%): -${formatCurrency(discountAmount)}`, textX, finalY + 6);
-
     doc.setFontSize(14);
     doc.setTextColor(201, 169, 110);
     doc.text(`Total Final: ${formatCurrency(grandTotal)}`, textX, finalY + 14);
-
-    // Footer
     doc.setFontSize(8);
     doc.setTextColor(150);
     doc.text("Documento generado automáticamente por Aura Hogar", 14, 280);
 
-    // Save
     const fileName = `Presupuesto_${project?.client || project?.name || 'Sin_Nombre'}_${new Date().toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
   };
 
   const handleExportExcel = () => {
     import('xlsx').then(XLSX => {
-      // 1. Prepare Data
       const data = budgetItems.map(item => {
         const itemTotal = item.unitPrice * item.quantity;
         const profit = item.unitPrice - item.cost;
-        const totalProfit = profit * item.quantity;
-
         return {
           "Producto": item.name,
           "Categoría": item.category || 'General',
@@ -145,231 +93,201 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
           "Ganancia x Unidad": profit,
           "Total Venta": itemTotal,
           "Total Costo": (item.cost || 0) * item.quantity,
-          "Total Ganancia": totalProfit
+          "Total Ganancia": profit * item.quantity
         };
       });
-
-      // 2. Add Summary Rows
-      data.push({}); // Empty row
-      data.push({ "Producto": "RESUMEN" });
+      data.push({}, { "Producto": "RESUMEN" });
       data.push({ "Producto": "Subtotal Venta", "Total Venta": subtotal });
       data.push({ "Producto": `Descuento (${discount}%)`, "Total Venta": -discountAmount });
       data.push({ "Producto": "Total Final", "Total Venta": grandTotal });
-
-      // Internal metrics
-      data.push({});
-      data.push({ "Producto": "METRICAS INTERNAS" });
+      data.push({}, { "Producto": "METRICAS INTERNAS" });
       data.push({ "Producto": "Total Costos", "Total Venta": totalCosts });
       data.push({ "Producto": "Total Mano de Obra", "Total Venta": totalLabor });
       data.push({ "Producto": "Ganancia Neta", "Total Venta": totalProfit });
       data.push({ "Producto": "Margen %", "Total Venta": `${profitMargin}%` });
 
-      // 3. Create Workbook
       const worksheet = XLSX.utils.json_to_sheet(data);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Presupuesto Interno");
-
-      // 4. Save
-      const fileName = `Presupuesto_Interno_${project?.client || project?.name || 'Sin_Nombre'}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      XLSX.writeFile(workbook, fileName);
+      XLSX.writeFile(workbook, `Presupuesto_Interno_${project?.client || project?.name || 'Sin_Nombre'}_${new Date().toISOString().split('T')[0]}.xlsx`);
     });
   };
 
+  const isEmpty = budgetItems?.length === 0;
+
   return (
-    <div className="bg-white rounded-lg border border-border shadow-sm h-fit">
+    <div className="flex flex-col bg-white rounded-xl border border-border shadow-sm h-[calc(100vh-88px)]">
+
       {/* Header */}
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-heading font-semibold text-foreground">
-            Resumen del Presupuesto
-          </h2>
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Icon name="FileText" size={18} className="text-accent" />
+          <span className="text-sm font-semibold text-foreground">Presupuesto</span>
           {budgetItems?.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              iconName="Trash2"
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              {budgetItems.length} {budgetItems.length === 1 ? 'ítem' : 'ítems'}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={budgetDate}
+            onChange={(e) => setBudgetDate(e?.target?.value)}
+            className="text-xs text-muted-foreground border-0 focus:outline-none bg-transparent cursor-pointer"
+          />
+          {!isEmpty && (
+            <button
               onClick={onClearBudget}
-              className="text-error hover:bg-error/10"
+              className="text-xs text-muted-foreground hover:text-error transition-colors"
             >
-              Limpiar
-            </Button>
+              Vaciar
+            </button>
           )}
         </div>
       </div>
 
-      {/* Project Info */}
-      <div className="p-4 border-b border-border bg-muted/20">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            {project?.name && (
-              <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
-            )}
-            {project?.client && (
-              <p className="text-xs text-muted-foreground truncate">Cliente: {project.client}</p>
-            )}
-          </div>
-          <Input
-            label="Fecha"
-            type="date"
-            value={budgetDate}
-            onChange={(e) => setBudgetDate(e?.target?.value)}
-            className="w-40 flex-shrink-0"
-          />
-        </div>
-      </div>
-
-      {/* Budget Items List */}
-      <div className="divide-y divide-border max-h-[400px] overflow-y-auto">
-        {budgetItems?.length === 0 ? (
-          <div className="p-12 text-center">
-            <Icon name="ShoppingCart" size={48} className="text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              No hay productos agregados
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Selecciona productos del catálogo para comenzar
-            </p>
+      {/* Items list */}
+      <div className="flex-1 overflow-y-auto">
+        {isEmpty ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Icon name="ShoppingCart" size={28} className="text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">El presupuesto está vacío</p>
+            <p className="text-xs text-muted-foreground">Hacé clic en los productos del catálogo para agregarlos</p>
           </div>
         ) : (
-          budgetItems?.map(item => (
-            <BudgetItem
-              key={item?.id}
-              item={item}
-              viewMode={viewMode}
-              onUpdateQuantity={onUpdateQuantity}
-              onRemove={onRemoveItem}
-            />
-          ))
+          <div>
+            {/* Column headers */}
+            {viewMode === 'client' ? (
+              <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 border-b border-border text-xs text-muted-foreground">
+                <div className="w-12 flex-shrink-0" />
+                <div className="flex-1">Producto</div>
+                <div className="flex-shrink-0 w-24 text-center">Cantidad</div>
+                <div className="w-24 text-right">Subtotal</div>
+                <div className="w-7 flex-shrink-0" />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 border-b border-border text-xs text-muted-foreground">
+                <div className="w-12 flex-shrink-0" />
+                <div className="flex-1">Producto · cantidad · costo / M.O. / ganancia</div>
+                <div className="w-24 text-right">Subtotal</div>
+                <div className="w-7 flex-shrink-0" />
+              </div>
+            )}
+            {budgetItems?.map(item => (
+              <BudgetItem
+                key={item?.id}
+                item={item}
+                viewMode={viewMode}
+                onUpdateQuantity={onUpdateQuantity}
+                onRemove={onRemoveItem}
+              />
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Totals Section */}
-      {budgetItems?.length > 0 && (
-        <div className="p-6 border-t border-border bg-muted/30">
-          <div className="space-y-3">
+      {/* Totals + actions */}
+      {!isEmpty && (
+        <div className="border-t border-border flex-shrink-0">
+
+          {/* Subtotal + discount */}
+          <div className="px-5 pt-4 pb-3 space-y-3 border-b border-border">
+
             {/* Subtotal */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium text-foreground">
-                {formatCurrency(subtotal)}
-              </span>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Subtotal</span>
+              <span className="text-sm font-medium text-foreground">{formatCurrency(subtotal)}</span>
             </div>
 
             {/* Discount */}
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Descuento</span>
-                <input
-                  type="number"
-                  value={discount}
-                  onChange={(e) => setDiscount(Math.max(0, Math.min(100, parseFloat(e?.target?.value) || 0)))}
-                  className="w-16 h-7 px-2 text-center border border-input rounded text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                />
-                <span className="text-xs text-muted-foreground">%</span>
+                <span className="text-sm text-muted-foreground">Descuento</span>
+                <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                  <input
+                    type="number"
+                    value={discount}
+                    onChange={(e) => setDiscount(Math.max(0, Math.min(100, parseFloat(e?.target?.value) || 0)))}
+                    className="w-14 h-9 px-2 text-center text-sm font-semibold focus:outline-none bg-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    min="0" max="100" step="0.5"
+                  />
+                  <span className="px-2 h-9 flex items-center text-sm text-muted-foreground bg-muted border-l border-border">%</span>
+                </div>
               </div>
-              <span className="font-medium text-error">
-                -{formatCurrency(discountAmount)}
+              <span className="text-sm font-medium text-error">
+                {discountAmount > 0 ? `-${formatCurrency(discountAmount)}` : '—'}
               </span>
             </div>
 
-            {/* Internal View - Cost Breakdown */}
+            {/* Internal metrics */}
             {viewMode === 'internal' && (
-              <>
-                <div className="pt-3 border-t border-border" />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Icon name="DollarSign" size={14} />
-                    Total costos
-                  </span>
-                  <span className="font-medium text-foreground">
-                    {formatCurrency(totalCosts)}
-                  </span>
+              <div className="mt-1 pt-3 border-t border-border">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Desglose interno</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-muted/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Costo material</p>
+                    <p className="text-sm font-bold text-foreground">{formatCurrency(totalCosts)}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Mano de obra</p>
+                    <p className="text-sm font-bold text-foreground">{formatCurrency(totalLabor)}</p>
+                  </div>
+                  <div className="bg-success/10 rounded-lg p-3 text-center">
+                    <p className="text-xs text-success/80 mb-1">Ganancia</p>
+                    <p className="text-sm font-bold text-success">{formatCurrency(totalProfit)}</p>
+                    <p className="text-xs text-success/70 mt-0.5">{profitMargin}%</p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Icon name="Wrench" size={14} />
-                    Total mano de obra
-                  </span>
-                  <span className="font-medium text-foreground">
-                    {formatCurrency(totalLabor)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Icon name="TrendingUp" size={14} />
-                    Ganancia total
-                  </span>
-                  <span className="font-medium text-success">
-                    {formatCurrency(totalProfit)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Icon name="Percent" size={14} />
-                    Margen
-                  </span>
-                  <span className="font-medium text-success">
-                    {profitMargin}%
-                  </span>
-                </div>
-              </>
+              </div>
             )}
+          </div>
 
-            {/* Grand Total */}
-            <div className="pt-3 border-t border-border" />
+          {/* Grand total */}
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-heading font-semibold text-foreground">
-                TOTAL FINAL
-              </span>
-              <span className="text-2xl font-heading font-bold text-black">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Total final</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{budgetItems.length} {budgetItems.length === 1 ? 'producto' : 'productos'}</p>
+              </div>
+              <span className="text-2xl font-heading font-bold text-accent">
                 {formatCurrency(grandTotal)}
               </span>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Export Actions */}
-      <div className="p-6 border-t border-border">
-        <div className="space-y-3">
-          {onSave && (
-            <Button
-              variant="default"
-              size="default"
-              iconName="Save"
-              onClick={() => onSave({ subtotal, discount, grandTotal })}
-              fullWidth
-              className="bg-accent hover:bg-accent/90 mb-4"
-            >
-              Guardar Proyecto
-            </Button>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              size="default"
-              iconName="FileText"
-              onClick={handleExportPDF}
-              fullWidth
-            >
-              Descargar PDF
-            </Button>
-            <Button
-              variant="outline"
-              size="default"
-              iconName="FileSpreadsheet"
-              onClick={handleExportExcel}
-              fullWidth
-            >
-              Descargar Excel
-            </Button>
+          {/* Action buttons */}
+          <div className="px-5 py-3 flex flex-col gap-2">
+            {onSave && (
+              <button
+                onClick={() => onSave({ subtotal, discount, grandTotal })}
+                className="w-full h-10 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon name="Save" size={15} />
+                Guardar presupuesto
+              </button>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleExportPDF}
+                className="h-9 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Icon name="FileText" size={14} />
+                Exportar PDF
+              </button>
+              <button
+                onClick={handleExportExcel}
+                className="h-9 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Icon name="FileSpreadsheet" size={14} />
+                Exportar Excel
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

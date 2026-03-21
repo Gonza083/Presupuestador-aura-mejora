@@ -6,6 +6,7 @@ import ProductCatalog from './components/ProductCatalog';
 import BudgetSummary from './components/BudgetSummary';
 import { productsService, categoriesService, projectsService, lineItemsService, subscribeToProducts, unsubscribeChannel } from '../../services/supabaseService';
 import { useAuth } from '../../contexts/AuthContext';
+import DeleteConfirmModal from '../product-management/components/DeleteConfirmModal';
 
 const BudgetBuilder = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const BudgetBuilder = () => {
   const [viewMode, setViewMode] = useState('client'); // 'client' or 'internal'
   const [initialDiscount, setInitialDiscount] = useState(0);
   const [project, setProject] = useState(null);
+  const [clearModal, setClearModal] = useState(false);
 
   // Load products, categories, and project data on mount
   useEffect(() => {
@@ -168,9 +170,12 @@ const BudgetBuilder = () => {
   };
 
   const handleClearBudget = () => {
-    if (window.confirm('¿Estás seguro de vaciar el presupuesto?')) {
-      setBudgetItems([]);
-    }
+    setClearModal(true);
+  };
+
+  const confirmClearBudget = () => {
+    setBudgetItems([]);
+    setClearModal(false);
   };
 
   const handleSaveProject = async (totals) => {
@@ -216,47 +221,63 @@ const BudgetBuilder = () => {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-white border-b border-border sticky top-0 z-10">
-        <div className="max-w-[1800px] mx-auto px-6 py-4">
+        <div className="max-w-[1800px] mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                iconName="ArrowLeft"
+              <button
                 onClick={() => navigate('/projects-main')}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
               >
-                Volver atrás
-              </Button>
-              <div className="h-6 w-px bg-border" />
+                <Icon name="ArrowLeft" size={18} className="group-hover:-translate-x-1 transition-transform" />
+                <span className="text-sm font-medium">Proyectos</span>
+              </button>
+              <div className="h-5 w-px bg-border" />
               <div>
-                <h1 className="text-2xl font-heading font-bold text-foreground">
-                  Constructor de Presupuestos
+                <h1 className="text-base font-heading font-semibold text-foreground leading-tight">
+                  {project?.name || 'Presupuesto'}
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  Arma presupuestos profesionales en tiempo real
-                </p>
+                {project?.client && (
+                  <p className="text-xs text-muted-foreground">Cliente: {project.client}</p>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'client' ? 'default' : 'outline'}
-                size="sm"
-                iconName="Eye"
-                onClick={() => setViewMode('client')}
-              >
-                Vista Cliente
-              </Button>
-              <Button
-                variant={viewMode === 'internal' ? 'default' : 'outline'}
-                size="sm"
-                iconName="Lock"
-                onClick={() => setViewMode('internal')}
-              >
-                Vista Interna
-              </Button>
+            <div className="flex items-center gap-3">
+              {successMessage && (
+                <span className="flex items-center gap-1.5 text-xs text-success font-medium">
+                  <Icon name="CheckCircle" size={14} />
+                  {successMessage}
+                </span>
+              )}
+              {error && (
+                <span className="flex items-center gap-1.5 text-xs text-error font-medium">
+                  <Icon name="AlertCircle" size={14} />
+                  {error}
+                </span>
+              )}
+              <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
+                <button
+                  onClick={() => setViewMode('client')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    viewMode === 'client' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon name="Eye" size={13} />
+                  Cliente
+                </button>
+                <button
+                  onClick={() => setViewMode('internal')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    viewMode === 'internal' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon name="Lock" size={13} />
+                  Interno
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -264,21 +285,7 @@ const BudgetBuilder = () => {
 
       {/* Main Content */}
       <div className="max-w-[1800px] mx-auto px-6 py-6">
-        {successMessage && (
-          <div className="mb-6 p-4 bg-success/10 border border-success/30 rounded-lg flex items-center gap-2">
-            <Icon name="CheckCircle" size={20} className="text-success flex-shrink-0" />
-            <p className="text-sm text-success">{successMessage}</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 p-4 bg-error/10 border border-error/30 rounded-lg flex items-center gap-2">
-            <Icon name="AlertCircle" size={20} className="text-error flex-shrink-0" />
-            <p className="text-sm text-error">{error}</p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6">
           {/* Product Catalog Section */}
           <ProductCatalog
             products={products}
@@ -301,6 +308,16 @@ const BudgetBuilder = () => {
         </div>
       </div>
     </div>
+
+    <DeleteConfirmModal
+      isOpen={clearModal}
+      onClose={() => setClearModal(false)}
+      onConfirm={confirmClearBudget}
+      title="Vaciar presupuesto"
+      message="¿Estás seguro de que deseas quitar todos los productos del presupuesto?"
+      itemName={project?.name || ''}
+    />
+    </>
   );
 };
 
