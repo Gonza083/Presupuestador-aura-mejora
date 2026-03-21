@@ -412,9 +412,9 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
                   Precio Final al Cliente:
                 </span>
                 <span className="text-2xl font-heading font-bold text-accent">
-                  {new Intl.NumberFormat('es-AR', {
+                  {new Intl.NumberFormat('es-US', {
                     style: 'currency',
-                    currency: 'ARS',
+                    currency: 'USD',
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0
                   })?.format(finalPrice)}

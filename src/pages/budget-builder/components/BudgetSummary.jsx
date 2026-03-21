@@ -14,9 +14,9 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
   }, [initialDiscount]);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-AR', {
+    return new Intl.NumberFormat('es-US', {
       style: 'currency',
-      currency: 'ARS',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     })?.format(amount);
@@ -47,8 +47,8 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
       item.name,
       item.category || '-',
       item.quantity,
-      new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.unitPrice),
-      new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.unitPrice * item.quantity)
+      new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD' }).format(item.unitPrice),
+      new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD' }).format(item.unitPrice * item.quantity)
     ]);
 
     autoTable(doc, {

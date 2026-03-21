@@ -5,7 +5,6 @@ import { User, LogOut } from 'lucide-react';
 
 import NavigationCard from '../../components/ui/NavigationCard';
 import UserRoleIndicator from './components/UserRoleIndicator';
-import KeyboardShortcutsHelper from './components/KeyboardShortcutsHelper';
 
 const LandingDashboard = () => {
   const navigate = useNavigate();
@@ -70,7 +69,6 @@ const LandingDashboard = () => {
           />
         </div>
 
-        <KeyboardShortcutsHelper />
       </main>
     </div>
   );

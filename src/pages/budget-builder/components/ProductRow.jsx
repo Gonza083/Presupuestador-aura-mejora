@@ -6,9 +6,9 @@ const ProductRow = ({ product, addedCount, onAddToBudget }) => {
   const [lightbox, setLightbox] = useState(false);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-AR', {
+    return new Intl.NumberFormat('es-US', {
       style: 'currency',
-      currency: 'ARS',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     })?.format(amount);

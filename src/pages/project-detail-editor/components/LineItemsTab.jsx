@@ -125,7 +125,7 @@ const LineItemsTab = ({ projectId }) => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'USD'
     })?.format(amount);
   };
 
