@@ -59,11 +59,13 @@ const ProjectsMain = () => {
 
   // Filter projects based on search query
   const filteredProjects = projects?.filter(project => {
+    if (!searchQuery?.trim()) return true;
     const query = searchQuery?.toLowerCase();
     return (
       project?.name?.toLowerCase()?.includes(query) ||
       project?.description?.toLowerCase()?.includes(query) ||
-      formatDate(project?.created_at)?.toLowerCase()?.includes(query)
+      project?.client?.toLowerCase()?.includes(query) ||
+      project?.project_type?.toLowerCase()?.includes(query)
     );
   });
 
@@ -166,20 +168,28 @@ const ProjectsMain = () => {
     <>
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate('/landing-dashboard')}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 group"
-          >
-            <Icon name="ArrowLeft" size={20} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-sm font-medium">Volver al inicio</span>
-          </button>
-
-          <h1 className="text-3xl font-heading font-bold text-foreground text-center mb-2">
-            Selecciona un proyecto existente o crea uno nuevo para continuar
-          </h1>
+      <div className="bg-white border-b border-border sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/landing-dashboard')}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <Icon name="ArrowLeft" size={18} className="group-hover:-translate-x-1 transition-transform" />
+                <span className="text-sm font-medium">Inicio</span>
+              </button>
+              <div className="h-5 w-px bg-border" />
+              <h1 className="text-xl font-heading font-semibold text-foreground">Proyectos</h1>
+            </div>
+            <button
+              onClick={handleCreateProject}
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+            >
+              <Icon name="Plus" size={16} />
+              Nuevo Proyecto
+            </button>
+          </div>
         </div>
       </div>
 
@@ -192,48 +202,11 @@ const ProjectsMain = () => {
           </div>
         )}
 
-        {/* Create New Project Card - Prominent */}
-        <div
-          onClick={handleCreateProject}
-          className="bg-gradient-to-br from-accent/5 to-accent/10 border-2 border-accent/30 rounded-xl p-8 mb-12 cursor-pointer hover:shadow-lg hover:border-accent/50 transition-all duration-250 group"
-          role="button"
-          tabIndex={0}
-          onKeyPress={(e) => {
-            if (e?.key === 'Enter' || e?.key === ' ') {
-              e?.preventDefault();
-              handleCreateProject();
-            }
-          }}
-        >
-          <div className="flex items-center gap-6">
-            {/* Icon Circle */}
-            <div className="flex-shrink-0 w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center group-hover:bg-accent/30 transition-colors">
-              <Icon name="Plus" size={32} className="text-accent" />
-            </div>
-
-            {/* Content */}
-            <div className="flex-1">
-              <h2 className="text-2xl font-heading font-bold text-foreground mb-2">
-                Crear Nuevo Proyecto
-              </h2>
-              <p className="text-muted-foreground text-base">
-                Comienza un nuevo presupuesto desde cero
-              </p>
-            </div>
-
-            {/* Arrow */}
-            <div className="flex-shrink-0">
-              <Icon name="ArrowRight" size={28} className="text-accent group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </div>
-
-        {/* Existing Projects Section */}
+        {/* Section Header */}
         <div>
-          {/* Section Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-heading font-semibold text-foreground">
-              Proyectos Existentes ({filteredProjects?.length})
+            <h2 className="text-lg font-semibold text-foreground">
+              {filteredProjects?.length} {filteredProjects?.length === 1 ? 'proyecto' : 'proyectos'}
             </h2>
 
             {/* Search Bar */}
@@ -246,7 +219,7 @@ const ProjectsMain = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre o fecha…"
+                  placeholder="Buscar por nombre, cliente o tipo…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e?.target?.value)}
                   className="w-full h-10 pl-10 pr-4 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -265,6 +238,8 @@ const ProjectsMain = () => {
                     id: project?.id,
                     name: project?.name,
                     description: project?.description,
+                    client: project?.client,
+                    project_type: project?.project_type,
                     createdAt: new Date(project?.created_at),
                     status: project?.status
                   }}

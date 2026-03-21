@@ -15,7 +15,8 @@ const ProjectDetailEditor = () => {
     name: '',
     description: '',
     client: '',
-    start_date: ''
+    start_date: '',
+    status: 'presupuestado'
   });
 
   const [loading, setLoading] = useState(false);
@@ -41,7 +42,8 @@ const ProjectDetailEditor = () => {
           name: data?.name || '',
           description: data?.description || '',
           client: data?.client || '',
-          start_date: data?.start_date || ''
+          start_date: data?.start_date || '',
+          status: data?.status || 'presupuestado'
         });
       } else {
         setError('Proyecto no encontrado');
@@ -220,6 +222,24 @@ const ProjectDetailEditor = () => {
                 type="date"
                 value={formData?.start_date}
                 onChange={(e) => handleInputChange('start_date', e?.target?.value)}
+                disabled={loading}
+              />
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Estado del Proyecto
+              </label>
+              <Select
+                options={[
+                  { value: 'presupuestado', label: 'Presupuestado' },
+                  { value: 'en_proceso', label: 'En proceso' },
+                  { value: 'finalizado', label: 'Finalizado' },
+                  { value: 'cancelado', label: 'Cancelado' }
+                ]}
+                value={formData?.status}
+                onChange={(value) => handleInputChange('status', value)}
                 disabled={loading}
               />
             </div>

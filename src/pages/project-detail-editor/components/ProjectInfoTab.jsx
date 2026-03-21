@@ -16,6 +16,7 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
       if (field === 'description') updates.description = value;
       if (field === 'client') updates.client = value;
       if (field === 'projectType') updates.projectType = value;
+      if (field === 'status') updates.status = value;
       if (field === 'startDate') updates.startDate = value;
       if (field === 'endDate') updates.endDate = value;
       
@@ -36,6 +37,13 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
     { value: 'Iluminación', label: 'Iluminación' },
     { value: 'Audio/Video', label: 'Audio/Video' },
     { value: 'Mixto', label: 'Mixto' }
+  ];
+
+  const statusOptions = [
+    { value: 'presupuestado', label: 'Presupuestado' },
+    { value: 'en_proceso', label: 'En proceso' },
+    { value: 'finalizado', label: 'Finalizado' },
+    { value: 'cancelado', label: 'Cancelado' }
   ];
 
   return (
@@ -103,6 +111,19 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
                 placeholder="Seleccionar tipo"
               />
             </div>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Estado del Proyecto
+            </label>
+            <Select
+              options={statusOptions}
+              value={projectData?.status || ''}
+              onChange={(value) => handleInputChange('status', value)}
+              placeholder="Seleccionar estado"
+            />
           </div>
 
           {/* Dates */}
