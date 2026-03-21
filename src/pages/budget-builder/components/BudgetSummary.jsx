@@ -6,8 +6,7 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import BudgetItem from './BudgetItem';
 
-const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, initialDiscount = 0 }) => {
-  const [clientName, setClientName] = useState('');
+const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, initialDiscount = 0, project }) => {
   const [budgetDate, setBudgetDate] = useState(new Date()?.toISOString()?.split('T')?.[0]);
   const [discount, setDiscount] = useState(initialDiscount);
 
@@ -58,15 +57,18 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
 
     // Project/Company Info
     doc.setFontSize(22);
-    doc.setTextColor(59, 130, 246); // Accent blue
+    doc.setTextColor(201, 169, 110); // Aura gold
     doc.text("Presupuesto", 14, 20);
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text("Tech Project Manager", 14, 28);
+    doc.text("Aura Hogar", 14, 28);
     doc.text(`Fecha: ${budgetDate || new Date().toLocaleDateString()}`, 14, 34);
-    if (clientName) {
-      doc.text(`Cliente: ${clientName}`, 14, 40);
+    if (project?.client) {
+      doc.text(`Cliente: ${project.client}`, 14, 40);
+    }
+    if (project?.name) {
+      doc.text(`Proyecto: ${project.name}`, 14, 46);
     }
 
     // Table Data
@@ -92,11 +94,11 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 50,
+      startY: 58,
       theme: 'grid',
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [59, 130, 246], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 245, 255] }
+      headStyles: { fillColor: [201, 169, 110], textColor: 255 },
+      alternateRowStyles: { fillColor: [252, 248, 240] }
     });
 
     // Totals
@@ -112,16 +114,16 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
     doc.text(`Descuento (${discount}%): -${formatCurrency(discountAmount)}`, textX, finalY + 6);
 
     doc.setFontSize(14);
-    doc.setTextColor(59, 130, 246);
+    doc.setTextColor(201, 169, 110);
     doc.text(`Total Final: ${formatCurrency(grandTotal)}`, textX, finalY + 14);
 
     // Footer
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text("Documento generado automáticamente por Tech Project Manager", 14, 280);
+    doc.text("Documento generado automáticamente por Aura Hogar", 14, 280);
 
     // Save
-    const fileName = `Presupuesto_${clientName || 'Sin_Nombre'}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const fileName = `Presupuesto_${project?.client || project?.name || 'Sin_Nombre'}_${new Date().toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
   };
 
@@ -168,7 +170,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
       XLSX.utils.book_append_sheet(workbook, worksheet, "Presupuesto Interno");
 
       // 4. Save
-      const fileName = `Presupuesto_Interno_${clientName || 'Sin_Nombre'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Presupuesto_Interno_${project?.client || project?.name || 'Sin_Nombre'}_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(workbook, fileName);
     });
   };
@@ -195,21 +197,23 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
         </div>
       </div>
 
-      {/* Client Info */}
-      <div className="p-6 border-b border-border">
-        <div className="grid grid-cols-2 gap-4">
+      {/* Project Info */}
+      <div className="p-4 border-b border-border bg-muted/20">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            {project?.name && (
+              <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
+            )}
+            {project?.client && (
+              <p className="text-xs text-muted-foreground truncate">Cliente: {project.client}</p>
+            )}
+          </div>
           <Input
-            label="Nombre del cliente"
-            type="text"
-            placeholder="Ingrese el nombre"
-            value={clientName}
-            onChange={(e) => setClientName(e?.target?.value)}
-          />
-          <Input
-            label="Fecha del presupuesto"
+            label="Fecha"
             type="date"
             value={budgetDate}
             onChange={(e) => setBudgetDate(e?.target?.value)}
+            className="w-40 flex-shrink-0"
           />
         </div>
       </div>

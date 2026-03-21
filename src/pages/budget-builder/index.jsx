@@ -19,6 +19,7 @@ const BudgetBuilder = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [viewMode, setViewMode] = useState('client'); // 'client' or 'internal'
   const [initialDiscount, setInitialDiscount] = useState(0);
+  const [project, setProject] = useState(null);
 
   // Load products, categories, and project data on mount
   useEffect(() => {
@@ -71,6 +72,7 @@ const BudgetBuilder = () => {
         ]);
 
         if (project) {
+          setProject(project);
           setInitialDiscount(project?.discount || 0);
         }
 
@@ -294,6 +296,7 @@ const BudgetBuilder = () => {
             onClearBudget={handleClearBudget}
             onSave={handleSaveProject}
             initialDiscount={initialDiscount}
+            project={project}
           />
         </div>
       </div>
