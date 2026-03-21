@@ -3,7 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
-import { productsService, uploadProductImage } from '../../../services/supabaseService';
+import { productsService, uploadProductImage, uploadProductPDF } from '../../../services/supabaseService';
 
 const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -18,6 +18,8 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState(null);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState(null);
+  const [newPdfFile, setNewPdfFile] = useState(null);
   const [profitMode, setProfitMode] = useState('amount');
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,8 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
       setCurrentImageUrl(product?.image || null);
       setNewImageFile(null);
       setNewImagePreview(null);
+      setCurrentPdfUrl(product?.technicalPdf || null);
+      setNewPdfFile(null);
       setProfitMode('amount');
       setError(null);
     }
@@ -113,6 +117,11 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
         imageUrl = await uploadProductImage(newImageFile);
       }
 
+      let pdfUrl = currentPdfUrl;
+      if (newPdfFile) {
+        pdfUrl = await uploadProductPDF(newPdfFile);
+      }
+
       const updateData = {
         categoryId: formData?.category,
         name: formData?.name?.trim(),
@@ -120,6 +129,8 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
         description: formData?.description?.trim() || null,
         image: imageUrl,
         alt: `${formData?.name?.trim()} product image`,
+        hasPdf: !!pdfUrl,
+        technicalPdf: pdfUrl,
         finalPrice: finalPrice,
         cost: parseFloat(formData?.cost) || 0,
         labor: parseFloat(formData?.labor) || 0,
@@ -319,7 +330,94 @@ const EditProductModal = ({ isOpen, onClose, product, allCategories, onSuccess }
             </div>
           </div>
 
-          {/* 2. Costos y Precios */}
+          {/* 2. Ficha Técnica (PDF) */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon name="FileText" size={20} className="text-accent" />
+              <h3 className="text-lg font-semibold text-foreground">
+                Ficha Técnica (PDF)
+              </h3>
+            </div>
+            {currentPdfUrl || newPdfFile ? (
+              <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <Icon name="FileText" size={20} className="text-red-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  {newPdfFile ? (
+                    <p className="text-sm font-medium text-foreground truncate">{newPdfFile.name}</p>
+                  ) : (
+                    <a
+                      href={currentPdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-red-700 hover:underline truncate block"
+                    >
+                      Ver ficha técnica actual
+                    </a>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {newPdfFile ? 'Nuevo archivo seleccionado' : 'PDF cargado'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setNewPdfFile(e?.target?.files?.[0] || null)}
+                    className="hidden"
+                    id="edit-pdf-replace"
+                    disabled={loading}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    iconName="RefreshCw"
+                    onClick={() => document.getElementById('edit-pdf-replace')?.click()}
+                    disabled={loading}
+                  >
+                    Reemplazar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    iconName="Trash2"
+                    onClick={() => { setCurrentPdfUrl(null); setNewPdfFile(null); }}
+                    disabled={loading}
+                  >
+                    Quitar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-border rounded-lg p-5 text-center">
+                <Icon name="FileText" size={32} className="mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground mb-3">
+                  Subí la ficha técnica en formato PDF
+                </p>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => setNewPdfFile(e?.target?.files?.[0] || null)}
+                  className="hidden"
+                  id="edit-pdf-upload"
+                  disabled={loading}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  iconName="Upload"
+                  onClick={() => document.getElementById('edit-pdf-upload')?.click()}
+                  disabled={loading}
+                >
+                  Seleccionar PDF
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Costos y Precios */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">
               <Icon name="DollarSign" size={20} className="text-accent" />

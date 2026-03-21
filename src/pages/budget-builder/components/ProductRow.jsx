@@ -71,6 +71,20 @@ const ProductRow = ({ product, addedCount, onAddToBudget }) => {
         </span>
       </div>
 
+      {/* PDF button */}
+      {product?.technical_pdf && (
+        <a
+          href={product.technical_pdf}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex-shrink-0 w-7 h-7 rounded-lg bg-red-100 hover:bg-red-600 flex items-center justify-center transition-colors group/pdf"
+          title="Ver ficha técnica"
+        >
+          <Icon name="FileText" size={13} className="text-red-600 group-hover/pdf:text-white transition-colors" />
+        </a>
+      )}
+
       {/* Add button */}
       <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-accent/10 group-hover:bg-accent flex items-center justify-center transition-colors">
         <Icon name="Plus" size={14} className="text-accent group-hover:text-white transition-colors" />

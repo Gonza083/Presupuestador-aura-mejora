@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
@@ -22,6 +22,11 @@ const BudgetBuilder = () => {
   const [initialDiscount, setInitialDiscount] = useState(0);
   const [project, setProject] = useState(null);
   const [clearModal, setClearModal] = useState(false);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, []);
 
   // Load products, categories, and project data on mount
   useEffect(() => {
@@ -199,7 +204,7 @@ const BudgetBuilder = () => {
       setSuccessMessage('Proyecto guardado correctamente');
 
       // Hide success message after 3s
-      setTimeout(() => setSuccessMessage(null), 3000);
+      timeoutRef.current = setTimeout(() => setSuccessMessage(null), 3000);
 
       // Reload data to get fresh IDs? 
       // useful but might reset UI state. 

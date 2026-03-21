@@ -270,6 +270,7 @@ export const productsService = {
         image: productData?.image || null,
         alt: productData?.alt || null,
         has_pdf: productData?.hasPdf || false,
+        technical_pdf: productData?.technicalPdf || null,
         final_price: productData?.finalPrice || 0,
         cost: productData?.cost || 0,
         labor: productData?.labor || 0,
@@ -300,6 +301,7 @@ export const productsService = {
       if (updates?.image !== undefined) dbUpdates.image = updates?.image;
       if (updates?.alt !== undefined) dbUpdates.alt = updates?.alt;
       if (updates?.hasPdf !== undefined) dbUpdates.has_pdf = updates?.hasPdf;
+      if (updates?.technicalPdf !== undefined) dbUpdates.technical_pdf = updates?.technicalPdf;
       if (updates?.finalPrice !== undefined) dbUpdates.final_price = updates?.finalPrice;
       if (updates?.cost !== undefined) dbUpdates.cost = updates?.cost;
       if (updates?.labor !== undefined) dbUpdates.labor = updates?.labor;
@@ -999,6 +1001,23 @@ export async function uploadProductImage(file) {
 
   const { data: { publicUrl } } = supabase.storage
     .from('product-images')
+    .getPublicUrl(filename);
+
+  return publicUrl;
+}
+
+export async function uploadProductPDF(file) {
+  const user = await getAuthenticatedUser();
+  const filename = `${user.id}/${Date.now()}.pdf`;
+
+  const { error } = await supabase.storage
+    .from('product-pdfs')
+    .upload(filename, file);
+
+  if (error) throw error;
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('product-pdfs')
     .getPublicUrl(filename);
 
   return publicUrl;

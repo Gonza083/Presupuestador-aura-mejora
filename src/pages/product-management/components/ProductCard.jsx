@@ -68,10 +68,24 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
           {/* PDF Badge */}
           {product?.hasPDF && (
             <div className="absolute top-2 left-2">
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-600/90 backdrop-blur-sm text-white text-xs font-medium rounded-md shadow-sm">
-                <Icon name="FileText" size={11} />
-                PDF
-              </span>
+              {product?.technicalPdf ? (
+                <a
+                  href={product.technicalPdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-red-600/90 backdrop-blur-sm text-white text-xs font-medium rounded-md shadow-sm hover:bg-red-700/90 transition-colors"
+                  title="Ver ficha técnica"
+                >
+                  <Icon name="FileText" size={11} />
+                  PDF
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-600/90 backdrop-blur-sm text-white text-xs font-medium rounded-md shadow-sm">
+                  <Icon name="FileText" size={11} />
+                  PDF
+                </span>
+              )}
             </div>
           )}
 

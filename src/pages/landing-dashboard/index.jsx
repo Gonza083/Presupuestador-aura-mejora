@@ -18,7 +18,7 @@ const LandingDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img
-                src="/assets/Varios/PHOTO-2025-02-18-11-28-19 (2).jpg"
+                src="/assets/Varios/aura-isotipo.jpg"
                 alt="Aura Hogar"
                 className="h-10 w-auto object-contain"
               />

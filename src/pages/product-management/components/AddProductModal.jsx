@@ -3,7 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
-import { productsService, uploadProductImage } from '../../../services/supabaseService';
+import { productsService, uploadProductImage, uploadProductPDF } from '../../../services/supabaseService';
 
 const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -90,6 +90,11 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
         imageUrl = await uploadProductImage(formData.image);
       }
 
+      let pdfUrl = null;
+      if (formData?.pdfFile) {
+        pdfUrl = await uploadProductPDF(formData.pdfFile);
+      }
+
       await productsService?.create({
         categoryId: formData?.category,
         name: formData?.name,
@@ -97,7 +102,8 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
         description: formData?.description || null,
         image: imageUrl,
         alt: `${formData?.name} product image`,
-        hasPdf: !!formData?.pdfFile,
+        hasPdf: !!pdfUrl,
+        technicalPdf: pdfUrl,
         finalPrice: finalPrice,
         cost: parseFloat(formData?.cost) || 0,
         labor: parseFloat(formData?.labor) || 0,

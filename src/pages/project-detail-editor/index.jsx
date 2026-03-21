@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import { projectsService } from '../../services/supabaseService';
+import { PROJECT_STATUS_OPTIONS } from '../../utils/constants';
 
 const ProjectDetailEditor = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const isEditMode = projectId && projectId !== 'new';
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -90,14 +96,14 @@ const ProjectDetailEditor = () => {
         setSuccessMessage('Proyecto creado exitosamente');
 
         // Redirect to the newly created project in edit mode
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
           navigate(`/project-detail-editor/${newProject?.id}`);
         }, 1500);
         return;
       }
 
       // For edit mode, redirect to projects list after short delay
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         navigate('/projects-main');
       }, 1500);
     } catch (err) {
@@ -232,12 +238,7 @@ const ProjectDetailEditor = () => {
                 Estado del Proyecto
               </label>
               <Select
-                options={[
-                  { value: 'presupuestado', label: 'Presupuestado' },
-                  { value: 'en_proceso', label: 'En proceso' },
-                  { value: 'finalizado', label: 'Finalizado' },
-                  { value: 'cancelado', label: 'Cancelado' }
-                ]}
+                options={PROJECT_STATUS_OPTIONS}
                 value={formData?.status}
                 onChange={(value) => handleInputChange('status', value)}
                 disabled={loading}

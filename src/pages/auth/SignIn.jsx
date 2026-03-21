@@ -48,7 +48,7 @@ const SignIn = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <img
-              src="/assets/Varios/PHOTO-2025-02-18-11-28-19 (3).jpg"
+              src="/assets/Varios/aura-logo.jpg"
               alt="Aura Hogar"
               className="h-32 w-auto mx-auto mb-4 object-contain"
             />

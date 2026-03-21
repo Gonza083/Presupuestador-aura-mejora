@@ -116,6 +116,7 @@ const ProductManagement = () => {
         image: p?.image,
         alt: p?.alt,
         hasPDF: p?.has_pdf,
+        technicalPdf: p?.technical_pdf,
         finalPrice: p?.final_price,
         cost: p?.cost,
         labor: p?.labor,

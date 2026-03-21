@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
@@ -8,6 +8,11 @@ import Input from '../../components/ui/Input';
 const SignUp = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, []);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,7 +48,7 @@ const SignUp = () => {
 
     if (data?.user) {
       setSuccess(true);
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         navigate('/signin');
       }, 2000);
     }
@@ -56,7 +61,7 @@ const SignUp = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <img
-              src="/assets/Varios/PHOTO-2025-02-18-11-28-19 (3).jpg"
+              src="/assets/Varios/aura-logo.jpg"
               alt="Aura Hogar"
               className="h-32 w-auto mx-auto mb-4 object-contain"
             />

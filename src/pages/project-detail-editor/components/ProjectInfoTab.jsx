@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { projectsService } from '../../../services/supabaseService';
+import { PROJECT_TYPE_OPTIONS, PROJECT_STATUS_OPTIONS } from '../../../utils/constants';
 
 const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) => {
   const handleInputChange = async (field, value) => {
@@ -30,21 +31,6 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
     }
   };
 
-  const projectTypeOptions = [
-    { value: 'Domótica', label: 'Domótica' },
-    { value: 'Seguridad', label: 'Seguridad' },
-    { value: 'Redes', label: 'Redes' },
-    { value: 'Iluminación', label: 'Iluminación' },
-    { value: 'Audio/Video', label: 'Audio/Video' },
-    { value: 'Mixto', label: 'Mixto' }
-  ];
-
-  const statusOptions = [
-    { value: 'presupuestado', label: 'Presupuestado' },
-    { value: 'en_proceso', label: 'En proceso' },
-    { value: 'finalizado', label: 'Finalizado' },
-    { value: 'cancelado', label: 'Cancelado' }
-  ];
 
   return (
     <div className="space-y-6">
@@ -105,7 +91,7 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
                 Tipo de Proyecto *
               </label>
               <Select
-                options={projectTypeOptions}
+                options={PROJECT_TYPE_OPTIONS}
                 value={projectData?.project_type || ''}
                 onChange={(value) => handleInputChange('projectType', value)}
                 placeholder="Seleccionar tipo"
@@ -119,7 +105,7 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
               Estado del Proyecto
             </label>
             <Select
-              options={statusOptions}
+              options={PROJECT_STATUS_OPTIONS}
               value={projectData?.status || ''}
               onChange={(value) => handleInputChange('status', value)}
               placeholder="Seleccionar estado"
