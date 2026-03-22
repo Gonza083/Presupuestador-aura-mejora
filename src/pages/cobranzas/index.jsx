@@ -28,6 +28,9 @@ const ACCOUNT_STATUS = {
   saldado:   { label: 'Saldado',       color: 'text-success bg-success/10 border-success/30' },
 };
 
+const AMOUNTS_KEY = 'aura_show_amounts';
+const masked = '$ ••••••';
+
 const CobranzasPage = () => {
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
@@ -37,6 +40,18 @@ const CobranzasPage = () => {
   const [error, setError] = useState(null);
   const [modal, setModal] = useState({ open: false, account: null, loading: false });
   const [filter, setFilter] = useState('all'); // all | pendiente | parcial | saldado
+  const [showAmounts, setShowAmounts] = useState(() => {
+    return localStorage.getItem(AMOUNTS_KEY) === 'true';
+  });
+
+  const toggleAmounts = () => {
+    setShowAmounts(prev => {
+      localStorage.setItem(AMOUNTS_KEY, String(!prev));
+      return !prev;
+    });
+  };
+
+  const show = (n) => showAmounts ? fmt(n) : masked;
 
   useEffect(() => {
     loadAccounts();
@@ -148,6 +163,14 @@ const CobranzasPage = () => {
               <h1 className="text-xl font-heading font-semibold text-foreground">Cobranzas</h1>
             </div>
           </div>
+          <button
+            onClick={toggleAmounts}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title={showAmounts ? 'Ocultar montos' : 'Mostrar montos'}
+          >
+            <Icon name={showAmounts ? 'Eye' : 'EyeOff'} size={15} />
+            {showAmounts ? 'Ocultar montos' : 'Mostrar montos'}
+          </button>
         </div>
       </div>
 
@@ -164,19 +187,19 @@ const CobranzasPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-border shadow-sm p-5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Total presupuestado</p>
-            <p className="text-2xl font-bold text-foreground">{fmt(totalPresupuestado)}</p>
+            <p className="text-2xl font-bold text-foreground">{show(totalPresupuestado)}</p>
             <p className="text-xs text-muted-foreground mt-1">{accounts.length} cuenta{accounts.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="bg-white rounded-xl border border-border shadow-sm p-5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Cobrado</p>
-            <p className="text-2xl font-bold text-success">{fmt(totalCobrado)}</p>
+            <p className="text-2xl font-bold text-success">{show(totalCobrado)}</p>
             <p className="text-xs text-muted-foreground mt-1">
               {totalPresupuestado > 0 ? ((totalCobrado / totalPresupuestado) * 100).toFixed(1) : 0}% del total
             </p>
           </div>
           <div className="bg-white rounded-xl border border-border shadow-sm p-5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Pendiente de cobro</p>
-            <p className="text-2xl font-bold text-error">{fmt(totalPendiente)}</p>
+            <p className="text-2xl font-bold text-error">{show(totalPendiente)}</p>
             <p className="text-xs text-muted-foreground mt-1">
               {accounts.filter(a => a.status !== 'saldado').length} cuenta{accounts.filter(a => a.status !== 'saldado').length !== 1 ? 's' : ''} activa{accounts.filter(a => a.status !== 'saldado').length !== 1 ? 's' : ''}
             </p>
@@ -261,10 +284,10 @@ const CobranzasPage = () => {
 
                       {/* Amounts */}
                       <div className="text-right flex-shrink-0 space-y-0.5">
-                        <p className="text-lg font-bold text-foreground">{fmt(account.total_amount)}</p>
-                        <p className="text-sm text-success">Cobrado: {fmt(account.paid_amount)}</p>
+                        <p className="text-lg font-bold text-foreground">{show(account.total_amount)}</p>
+                        <p className="text-sm text-success">Cobrado: {show(account.paid_amount)}</p>
                         <p className={`text-sm font-medium ${remaining > 0 ? 'text-error' : 'text-success'}`}>
-                          {remaining > 0 ? `Pendiente: ${fmt(remaining)}` : 'Saldado'}
+                          {remaining > 0 ? `Pendiente: ${show(remaining)}` : 'Saldado'}
                         </p>
                       </div>
                     </div>
@@ -322,7 +345,7 @@ const CobranzasPage = () => {
                                 <td className="px-5 py-2 font-mono text-xs text-muted-foreground">{p.receipt_number}</td>
                                 <td className="px-5 py-2">{formatDate(p.payment_date)}</td>
                                 <td className="px-5 py-2">{PAYMENT_METHOD_LABELS[p.method] || p.method}</td>
-                                <td className="px-5 py-2 text-right font-bold">{fmt(p.amount)}</td>
+                                <td className="px-5 py-2 text-right font-bold">{show(p.amount)}</td>
                                 <td className="px-5 py-2">
                                   <div className="flex items-center justify-end gap-1">
                                     <button

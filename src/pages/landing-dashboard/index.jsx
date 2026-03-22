@@ -5,19 +5,32 @@ import { User, LogOut } from 'lucide-react';
 
 import NavigationCard from '../../components/ui/NavigationCard';
 import UserRoleIndicator from './components/UserRoleIndicator';
+import Icon from '../../components/AppIcon';
 import { dashboardService } from '../../services/supabaseService';
 
+const AMOUNTS_KEY = 'aura_show_amounts';
 const fmtUSD = (n) =>
   new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+const masked = '$ ••••••';
 
 const LandingDashboard = () => {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const [stats, setStats] = useState(null);
+  const [showAmounts, setShowAmounts] = useState(() => {
+    return localStorage.getItem(AMOUNTS_KEY) === 'true';
+  });
 
   useEffect(() => {
     dashboardService.getStats().then(setStats);
   }, []);
+
+  const toggleAmounts = () => {
+    setShowAmounts(prev => {
+      localStorage.setItem(AMOUNTS_KEY, String(!prev));
+      return !prev;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -34,6 +47,13 @@ const LandingDashboard = () => {
               <h1 className="text-2xl font-bold text-gray-900">Dashboard Principal</h1>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={toggleAmounts}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title={showAmounts ? 'Ocultar montos' : 'Mostrar montos'}
+              >
+                <Icon name={showAmounts ? 'Eye' : 'EyeOff'} size={18} className="text-gray-500" />
+              </button>
 <UserRoleIndicator
                 userName={profile?.full_name}
                 userRole={profile?.role}
@@ -92,8 +112,8 @@ const LandingDashboard = () => {
             iconName="Wallet"
             route="/cobranzas"
             metrics={stats ? [
-              { label: 'Cobrado', value: fmtUSD(stats.totalCollected), status: 'success' },
-              { label: 'Pendiente', value: fmtUSD(stats.totalPending), status: stats.totalPending > 0 ? 'warning' : undefined },
+              { label: 'Cobrado', value: showAmounts ? fmtUSD(stats.totalCollected) : masked, status: 'success' },
+              { label: 'Pendiente', value: showAmounts ? fmtUSD(stats.totalPending) : masked, status: stats.totalPending > 0 ? 'warning' : undefined },
             ] : undefined}
           />
         </div>
