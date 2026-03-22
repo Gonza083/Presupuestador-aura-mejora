@@ -53,7 +53,7 @@ const LandingDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <NavigationCard
             title="Gestión de Categorías"
             description="Organiza y administra tus productos por categorías"
@@ -66,6 +66,13 @@ const LandingDashboard = () => {
             description="Crea y gestiona presupuestos para tus instalaciones"
             iconName="Briefcase"
             route="/projects-main"
+          />
+
+          <NavigationCard
+            title="Cobranzas"
+            description="Seguimiento de pagos y comprobantes de todos los proyectos"
+            iconName="Wallet"
+            route="/cobranzas"
           />
         </div>
 

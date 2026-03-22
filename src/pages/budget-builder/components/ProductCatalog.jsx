@@ -3,7 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import ProductRow from './ProductRow';
 
-const ProductCatalog = ({ products, categories, budgetItems, onAddToBudget }) => {
+const ProductCatalog = ({ products, categories, budgetItems, onAddToBudget, isLocked = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -93,6 +93,7 @@ const ProductCatalog = ({ products, categories, budgetItems, onAddToBudget }) =>
                 product={product}
                 addedCount={getProductCount(product?.id)}
                 onAddToBudget={onAddToBudget}
+                isLocked={isLocked}
               />
             ))}
           </div>

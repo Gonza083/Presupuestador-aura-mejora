@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 
-const ProductRow = ({ product, addedCount, onAddToBudget }) => {
+const ProductRow = ({ product, addedCount, onAddToBudget, isLocked = false }) => {
   const [imageError, setImageError] = useState(false);
   const [lightbox, setLightbox] = useState(false);
 
@@ -17,9 +17,11 @@ const ProductRow = ({ product, addedCount, onAddToBudget }) => {
   return (
     <>
     <div
-      onClick={() => onAddToBudget(product, 1)}
-      className={`relative flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer group transition-all duration-200 hover:shadow-md hover:border-accent ${
-        addedCount > 0 ? 'border-accent bg-accent/5' : 'border-border bg-white'
+      onClick={() => !isLocked && onAddToBudget(product, 1)}
+      className={`relative flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-200 ${
+        isLocked
+          ? 'border-border bg-white cursor-default'
+          : `cursor-pointer group hover:shadow-md hover:border-accent ${addedCount > 0 ? 'border-accent bg-accent/5' : 'border-border bg-white'}`
       }`}
     >
       {/* Added badge */}

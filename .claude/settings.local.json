@@ -8,7 +8,8 @@
       "Bash(npm install:*)",
       "WebFetch(domain:www.aurahogar.com)",
       "Bash(grep -rl \"currency: ''''ARS''''\\\\|currency: ''''EUR''''\\\\|es-AR\\\\|''''es-ES''''.*currency\" src/)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Skill(claude-api)"
     ]
   }
 }

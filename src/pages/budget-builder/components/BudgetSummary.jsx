@@ -5,7 +5,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import BudgetItem from './BudgetItem';
 
-const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, initialDiscount = 0, project }) => {
+const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, initialDiscount = 0, project, isLocked = false }) => {
   const [budgetDate, setBudgetDate] = useState(new Date()?.toISOString()?.split('T')?.[0]);
   const [discount, setDiscount] = useState(initialDiscount);
 
@@ -136,13 +136,19 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
             onChange={(e) => setBudgetDate(e?.target?.value)}
             className="text-xs text-muted-foreground border-0 focus:outline-none bg-transparent cursor-pointer"
           />
-          {!isEmpty && (
+          {!isEmpty && !isLocked && (
             <button
               onClick={onClearBudget}
               className="text-xs text-muted-foreground hover:text-error transition-colors"
             >
               Vaciar
             </button>
+          )}
+          {isLocked && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              <Icon name="Lock" size={11} />
+              Solo lectura
+            </span>
           )}
         </div>
       </div>
@@ -183,6 +189,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
                 viewMode={viewMode}
                 onUpdateQuantity={onUpdateQuantity}
                 onRemove={onRemoveItem}
+                isLocked={isLocked}
               />
             ))}
           </div>
@@ -210,9 +217,10 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
                   <input
                     type="number"
                     value={discount}
-                    onChange={(e) => setDiscount(Math.max(0, Math.min(100, parseFloat(e?.target?.value) || 0)))}
-                    className="w-14 h-9 px-2 text-center text-sm font-semibold focus:outline-none bg-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    onChange={(e) => !isLocked && setDiscount(Math.max(0, Math.min(100, parseFloat(e?.target?.value) || 0)))}
+                    className="w-14 h-9 px-2 text-center text-sm font-semibold focus:outline-none bg-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none disabled:opacity-50"
                     min="0" max="100" step="0.5"
+                    readOnly={isLocked}
                   />
                   <span className="px-2 h-9 flex items-center text-sm text-muted-foreground bg-muted border-l border-border">%</span>
                 </div>
@@ -260,7 +268,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
 
           {/* Action buttons */}
           <div className="px-5 py-3 flex flex-col gap-2">
-            {onSave && (
+            {onSave && !isLocked && (
               <button
                 onClick={() => onSave({ subtotal, discount, grandTotal })}
                 className="w-full h-10 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"

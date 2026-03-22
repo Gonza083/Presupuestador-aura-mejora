@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { productsService, uploadProductImage, uploadProductPDF } from '../../../services/supabaseService';
+import { extractProductSpecs } from '../../../services/anthropicService';
 
 const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -91,8 +92,14 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
       }
 
       let pdfUrl = null;
+      let aiSpecs = null;
       if (formData?.pdfFile) {
         pdfUrl = await uploadProductPDF(formData.pdfFile);
+        try {
+          aiSpecs = await extractProductSpecs(pdfUrl);
+        } catch (specsErr) {
+          console.warn('Could not extract specs from PDF:', specsErr);
+        }
       }
 
       await productsService?.create({
@@ -104,6 +111,7 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
         alt: `${formData?.name} product image`,
         hasPdf: !!pdfUrl,
         technicalPdf: pdfUrl,
+        aiSpecs: aiSpecs,
         finalPrice: finalPrice,
         cost: parseFloat(formData?.cost) || 0,
         labor: parseFloat(formData?.labor) || 0,

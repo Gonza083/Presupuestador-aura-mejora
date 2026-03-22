@@ -17,6 +17,7 @@ const ProjectsMain = () => {
   const [error, setError] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ open: false, projectId: null, projectName: '', loading: false, error: null });
   const [createModal, setCreateModal] = useState({ open: false, name: '', loading: false, error: null });
+  const [statusModal, setStatusModal] = useState({ open: false, projectId: null, projectName: '', newStatus: null, loading: false });
 
   // Load projects on mount
   useEffect(() => {
@@ -136,6 +137,24 @@ const ProjectsMain = () => {
     }
   };
 
+  const handleStatusChange = (projectId, newStatus) => {
+    const project = projects?.find(p => p?.id === projectId);
+    setStatusModal({ open: true, projectId, projectName: project?.name || '', newStatus, loading: false });
+  };
+
+  const confirmStatusChange = async () => {
+    setStatusModal(prev => ({ ...prev, loading: true }));
+    try {
+      await projectsService?.update(statusModal.projectId, { status: statusModal.newStatus });
+      setProjects(prev => prev.map(p => p.id === statusModal.projectId ? { ...p, status: statusModal.newStatus } : p));
+      setStatusModal({ open: false, projectId: null, projectName: '', newStatus: null, loading: false });
+    } catch (err) {
+      console.error('Status change error:', err);
+      setStatusModal(prev => ({ ...prev, loading: false }));
+      setError('Error al cambiar el estado');
+    }
+  };
+
   const handleDeleteProject = (projectId) => {
     const project = projects?.find(p => p?.id === projectId);
     setDeleteModal({ open: true, projectId, projectName: project?.name || '', loading: false, error: null });
@@ -247,6 +266,7 @@ const ProjectsMain = () => {
                   onEdit={handleEditProject}
                   onDuplicate={handleDuplicateProject}
                   onDelete={handleDeleteProject}
+                  onStatusChange={handleStatusChange}
                   formatDate={formatDate}
                 />
               ))}
@@ -312,6 +332,47 @@ const ProjectsMain = () => {
       loading={deleteModal.loading}
       error={deleteModal.error}
     />
+
+    {statusModal.open && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !statusModal.loading && setStatusModal({ open: false, projectId: null, projectName: '', newStatus: null, loading: false })} />
+        <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <Icon name="RefreshCw" size={20} className="text-accent" />
+            </div>
+            <div>
+              <h2 className="text-lg font-heading font-semibold text-foreground">Cambiar estado</h2>
+              <p className="text-sm text-muted-foreground truncate">{statusModal.projectName}</p>
+            </div>
+          </div>
+          <p className="text-sm text-foreground mb-6">
+            ¿Confirmás cambiar el estado a{' '}
+            <strong>
+              {{ presupuestado: 'Presupuestado', aprobado: 'Aprobado', en_proceso: 'En proceso', finalizado: 'Finalizado', cancelado: 'Cancelado' }[statusModal.newStatus]}
+            </strong>
+            ?
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setStatusModal({ open: false, projectId: null, projectName: '', newStatus: null, loading: false })}
+              disabled={statusModal.loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmStatusChange}
+              disabled={statusModal.loading}
+              iconName={statusModal.loading ? 'Loader2' : 'Check'}
+              className={statusModal.loading ? '[&_svg]:animate-spin' : ''}
+            >
+              {statusModal.loading ? 'Guardando...' : 'Confirmar'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 };

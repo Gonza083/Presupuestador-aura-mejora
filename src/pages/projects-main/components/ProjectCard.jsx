@@ -1,16 +1,47 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 
-const statusConfig = {
-  presupuestado: { label: 'Presupuestado', className: 'bg-blue-50 text-blue-700', border: 'border-l-blue-400' },
-  en_proceso:    { label: 'En proceso',    className: 'bg-amber-50 text-amber-700', border: 'border-l-amber-400' },
-  finalizado:    { label: 'Finalizado',    className: 'bg-emerald-50 text-emerald-700', border: 'border-l-emerald-400' },
-  cancelado:     { label: 'Cancelado',     className: 'bg-red-50 text-red-600', border: 'border-l-red-400' },
-  active:        { label: 'Presupuestado', className: 'bg-blue-50 text-blue-700', border: 'border-l-blue-400' },
+const STATUS_CONFIG = {
+  presupuestado: { label: 'Presupuestado', badge: 'bg-blue-50 text-blue-700',   border: 'border-l-blue-400' },
+  aprobado:      { label: 'Aprobado',      badge: 'bg-violet-50 text-violet-700', border: 'border-l-violet-400' },
+  en_proceso:    { label: 'En proceso',    badge: 'bg-amber-50 text-amber-700',  border: 'border-l-amber-400' },
+  finalizado:    { label: 'Finalizado',    badge: 'bg-emerald-50 text-emerald-700', border: 'border-l-emerald-400' },
+  cancelado:     { label: 'Cancelado',     badge: 'bg-red-50 text-red-600',      border: 'border-l-red-400' },
+  active:        { label: 'Presupuestado', badge: 'bg-blue-50 text-blue-700',    border: 'border-l-blue-400' },
 };
 
-const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, formatDate }) => {
-  const status = statusConfig[project?.status] || statusConfig.active;
+const ALL_STATUSES = ['presupuestado', 'aprobado', 'finalizado', 'cancelado'];
+
+const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, onStatusChange, formatDate }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const currentStatus = project?.status || 'active';
+  const status = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.active;
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [dropdownOpen]);
+
+  const handleStatusClick = (e) => {
+    e.stopPropagation();
+    setDropdownOpen(prev => !prev);
+  };
+
+  const handleSelectStatus = (e, newStatus) => {
+    e.stopPropagation();
+    setDropdownOpen(false);
+    if (newStatus !== currentStatus) {
+      onStatusChange(project?.id, newStatus);
+    }
+  };
 
   return (
     <div
@@ -33,9 +64,44 @@ const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, formatDat
             <h3 className="text-lg font-semibold text-foreground group-hover:text-accent transition-colors truncate">
               {project?.name}
             </h3>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${status.className}`}>
-              {status.label}
-            </span>
+
+            {/* Status badge — clickable dropdown */}
+            <div className="relative flex-shrink-0" ref={dropdownRef}>
+              <button
+                onClick={handleStatusClick}
+                className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80 ${status.badge}`}
+                title="Cambiar estado"
+              >
+                {status.label}
+                <Icon name="ChevronDown" size={11} />
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-border rounded-lg shadow-lg py-1 min-w-[160px]">
+                  {ALL_STATUSES.map((s) => {
+                    const cfg = STATUS_CONFIG[s];
+                    const isCurrent = s === currentStatus;
+                    return (
+                      <button
+                        key={s}
+                        onClick={(e) => handleSelectStatus(e, s)}
+                        className={`w-full text-left flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                          isCurrent
+                            ? 'bg-muted/60 font-semibold cursor-default'
+                            : 'hover:bg-muted/40'
+                        }`}
+                      >
+                        {isCurrent && <Icon name="Check" size={13} className="text-accent flex-shrink-0" />}
+                        {!isCurrent && <span className="w-[13px]" />}
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${cfg.badge}`}>
+                          {cfg.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {project?.description && (
@@ -49,12 +115,6 @@ const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, formatDat
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Icon name="User" size={13} />
                 <span>{project.client}</span>
-              </div>
-            )}
-            {project?.project_type && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Icon name="Tag" size={13} />
-                <span>{project.project_type}</span>
               </div>
             )}
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

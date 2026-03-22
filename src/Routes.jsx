@@ -15,6 +15,7 @@ const TrashManagement = lazy(() => import('./pages/trash-management'));
 const ProjectsMain = lazy(() => import('./pages/projects-main'));
 const ProjectDetailEditor = lazy(() => import('./pages/project-detail-editor'));
 const BudgetBuilder = lazy(() => import('./pages/budget-builder'));
+const Cobranzas = lazy(() => import('./pages/cobranzas'));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
@@ -43,6 +44,7 @@ const Routes = () => {
             <Route path="/project-detail-editor/new" element={<ProtectedRoute><ProjectDetailEditor /></ProtectedRoute>} />
             <Route path="/project-detail-editor/:projectId" element={<ProtectedRoute><ProjectDetailEditor /></ProtectedRoute>} />
             <Route path="/budget-builder/:projectId" element={<ProtectedRoute><BudgetBuilder /></ProtectedRoute>} />
+            <Route path="/cobranzas" element={<ProtectedRoute><Cobranzas /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </RouterRoutes>

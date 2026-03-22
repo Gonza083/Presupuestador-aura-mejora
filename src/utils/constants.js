@@ -9,7 +9,7 @@ export const PROJECT_TYPE_OPTIONS = [
 
 export const PROJECT_STATUS_OPTIONS = [
   { value: 'presupuestado', label: 'Presupuestado' },
-  { value: 'en_proceso', label: 'En proceso' },
+  { value: 'aprobado', label: 'Aprobado' },
   { value: 'finalizado', label: 'Finalizado' },
   { value: 'cancelado', label: 'Cancelado' },
 ];

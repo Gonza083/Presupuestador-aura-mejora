@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 
-const BudgetItem = ({ item, viewMode, onUpdateQuantity, onRemove }) => {
+const BudgetItem = ({ item, viewMode, onUpdateQuantity, onRemove, isLocked = false }) => {
   const [imageError, setImageError] = useState(false);
 
   const formatCurrency = (amount) => {
@@ -33,14 +33,14 @@ const BudgetItem = ({ item, viewMode, onUpdateQuantity, onRemove }) => {
     </div>
   );
 
-  const removeBtn = (
+  const removeBtn = !isLocked ? (
     <button
       onClick={() => onRemove(item?.id)}
       className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-error hover:bg-error/10 transition-all"
     >
       <Icon name="X" size={14} />
     </button>
-  );
+  ) : <div className="w-7 flex-shrink-0" />;
 
   const qtyControls = (size = 'md') => {
     const h = size === 'lg' ? 'h-10' : 'h-9';
@@ -48,6 +48,11 @@ const BudgetItem = ({ item, viewMode, onUpdateQuantity, onRemove }) => {
     const inputW = size === 'lg' ? 'w-12' : 'w-10';
     const iconSize = size === 'lg' ? 14 : 12;
     return (
+      <>{isLocked ? (
+        <div className={`flex items-center justify-center border border-border rounded-lg flex-shrink-0 ${inputW} ${h} text-sm font-semibold text-foreground`}>
+          {item?.quantity}
+        </div>
+      ) : (
       <div className={`flex items-center border border-border rounded-lg overflow-hidden flex-shrink-0`}>
         <button
           onClick={() => onUpdateQuantity(item?.id, item?.quantity - 1)}
@@ -70,6 +75,7 @@ const BudgetItem = ({ item, viewMode, onUpdateQuantity, onRemove }) => {
           <Icon name="Plus" size={iconSize} />
         </button>
       </div>
+      )}</>
     );
   };
 

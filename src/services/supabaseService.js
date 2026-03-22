@@ -271,6 +271,7 @@ export const productsService = {
         alt: productData?.alt || null,
         has_pdf: productData?.hasPdf || false,
         technical_pdf: productData?.technicalPdf || null,
+        ai_specs: productData?.aiSpecs || null,
         final_price: productData?.finalPrice || 0,
         cost: productData?.cost || 0,
         labor: productData?.labor || 0,
@@ -302,6 +303,7 @@ export const productsService = {
       if (updates?.alt !== undefined) dbUpdates.alt = updates?.alt;
       if (updates?.hasPdf !== undefined) dbUpdates.has_pdf = updates?.hasPdf;
       if (updates?.technicalPdf !== undefined) dbUpdates.technical_pdf = updates?.technicalPdf;
+      if (updates?.aiSpecs !== undefined) dbUpdates.ai_specs = updates?.aiSpecs;
       if (updates?.finalPrice !== undefined) dbUpdates.final_price = updates?.finalPrice;
       if (updates?.cost !== undefined) dbUpdates.cost = updates?.cost;
       if (updates?.labor !== undefined) dbUpdates.labor = updates?.labor;
@@ -541,7 +543,7 @@ export const projectsService = {
 
       return data;
     } catch (error) {
-      console.error('Update project error:', error);
+      console.error('Update project error:', error?.message, error?.code, error?.details, error?.hint);
       throw error;
     }
   },
@@ -1199,6 +1201,203 @@ export const subscribeToCategories = (userId, callback) => {
 export const unsubscribeChannel = (subscription) => {
   if (subscription) {
     supabase?.removeChannel(subscription);
+  }
+};
+
+// =====================================================
+// PAYMENT ACCOUNTS SERVICE
+// =====================================================
+
+export const paymentAccountsService = {
+  async getAll() {
+    try {
+      const user = await getAuthenticatedUser();
+      const { data, error } = await supabase
+        ?.from('payment_accounts')
+        ?.select(`*, projects(id, name, client, status)`)
+        ?.eq('user_id', user?.id)
+        ?.is('deleted_at', null)
+        ?.order('created_at', { ascending: false });
+
+      if (error) {
+        if (isSchemaError(error)) throw error;
+        return [];
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Get all payment accounts error:', error);
+      throw error;
+    }
+  },
+
+  async getByProject(projectId) {
+    try {
+      const user = await getAuthenticatedUser();
+      const { data, error } = await supabase
+        ?.from('payment_accounts')
+        ?.select('*')
+        ?.eq('project_id', projectId)
+        ?.eq('user_id', user?.id)
+        ?.is('deleted_at', null)
+        ?.single();
+
+      if (error) {
+        if (error?.code === 'PGRST116') return null; // no rows
+        if (isSchemaError(error)) throw error;
+        return null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Get payment account error:', error);
+      throw error;
+    }
+  },
+
+  async create(projectId, totalAmount) {
+    try {
+      const user = await getAuthenticatedUser();
+      const { data, error } = await supabase
+        ?.from('payment_accounts')
+        ?.insert({
+          project_id: projectId,
+          user_id: user?.id,
+          total_amount: totalAmount,
+          paid_amount: 0,
+          status: 'pendiente'
+        })
+        ?.select()
+        ?.single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Create payment account error:', error);
+      throw error;
+    }
+  },
+
+  async updateAmounts(accountId, paidAmount, totalAmount) {
+    try {
+      let status = 'pendiente';
+      if (paidAmount >= totalAmount) status = 'saldado';
+      else if (paidAmount > 0) status = 'parcial';
+
+      const { data, error } = await supabase
+        ?.from('payment_accounts')
+        ?.update({ paid_amount: paidAmount, status, updated_at: new Date()?.toISOString() })
+        ?.eq('id', accountId)
+        ?.select()
+        ?.single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Update payment account error:', error);
+      throw error;
+    }
+  }
+};
+
+// =====================================================
+// PAYMENTS SERVICE
+// =====================================================
+
+export const paymentsService = {
+  async getByAccount(accountId) {
+    try {
+      const { data, error } = await supabase
+        ?.from('payments')
+        ?.select('*')
+        ?.eq('account_id', accountId)
+        ?.is('deleted_at', null)
+        ?.order('payment_date', { ascending: false });
+
+      if (error) {
+        if (isSchemaError(error)) throw error;
+        return [];
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Get payments error:', error);
+      throw error;
+    }
+  },
+
+  async create(accountId, paymentData) {
+    try {
+      const user = await getAuthenticatedUser();
+
+      const datePart = new Date()?.toISOString()?.slice(0, 10)?.replace(/-/g, '');
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      const receiptNumber = `REC-${datePart}-${rand}`;
+
+      const { data, error } = await supabase
+        ?.from('payments')
+        ?.insert({
+          account_id: accountId,
+          user_id: user?.id,
+          amount: paymentData?.amount,
+          payment_date: paymentData?.payment_date,
+          method: paymentData?.method,
+          notes: paymentData?.notes || null,
+          receipt_number: receiptNumber
+        })
+        ?.select()
+        ?.single();
+
+      if (error) throw error;
+
+      // Recalculate account totals
+      const allPayments = await this.getByAccount(accountId);
+      const totalPaid = allPayments?.reduce((sum, p) => sum + Number(p?.amount), 0);
+
+      const { data: account } = await supabase
+        ?.from('payment_accounts')
+        ?.select('total_amount')
+        ?.eq('id', accountId)
+        ?.single();
+
+      if (account) {
+        await paymentAccountsService?.updateAmounts(accountId, totalPaid, account?.total_amount);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Create payment error:', error);
+      throw error;
+    }
+  },
+
+  async softDelete(paymentId, accountId) {
+    try {
+      const user = await getAuthenticatedUser();
+
+      const { error } = await supabase
+        ?.from('payments')
+        ?.update({ deleted_at: new Date()?.toISOString(), deleted_by: user?.id })
+        ?.eq('id', paymentId);
+
+      if (error) throw error;
+
+      // Recalculate account totals
+      const allPayments = await this.getByAccount(accountId);
+      const totalPaid = allPayments?.reduce((sum, p) => sum + Number(p?.amount), 0);
+
+      const { data: account } = await supabase
+        ?.from('payment_accounts')
+        ?.select('total_amount')
+        ?.eq('id', accountId)
+        ?.single();
+
+      if (account) {
+        await paymentAccountsService?.updateAmounts(accountId, totalPaid, account?.total_amount);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Soft delete payment error:', error);
+      throw error;
+    }
   }
 };
 

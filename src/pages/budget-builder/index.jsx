@@ -7,6 +7,7 @@ import BudgetSummary from './components/BudgetSummary';
 import { productsService, categoriesService, projectsService, lineItemsService, subscribeToProducts, unsubscribeChannel } from '../../services/supabaseService';
 import { useAuth } from '../../contexts/AuthContext';
 import DeleteConfirmModal from '../product-management/components/DeleteConfirmModal';
+import AIBudgetModal from './components/AIBudgetModal';
 
 const BudgetBuilder = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const BudgetBuilder = () => {
   const [initialDiscount, setInitialDiscount] = useState(0);
   const [project, setProject] = useState(null);
   const [clearModal, setClearModal] = useState(false);
+  const [aiModal, setAiModal] = useState(false);
   const timeoutRef = useRef(null);
 
   useEffect(() => {
@@ -183,6 +185,12 @@ const BudgetBuilder = () => {
     setClearModal(false);
   };
 
+  const handleAIAddItems = (items) => {
+    items.forEach(({ product, quantity }) => {
+      handleAddToBudget(product, quantity);
+    });
+  };
+
   const handleSaveProject = async (totals) => {
     if (!projectId) return;
 
@@ -251,6 +259,15 @@ const BudgetBuilder = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {!['aprobado', 'finalizado', 'cancelado'].includes(project?.status) && (
+                <button
+                  onClick={() => setAiModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold transition-colors"
+                >
+                  <Icon name="Sparkles" size={13} />
+                  Generar con IA
+                </button>
+              )}
               {successMessage && (
                 <span className="flex items-center gap-1.5 text-xs text-success font-medium">
                   <Icon name="CheckCircle" size={14} />
@@ -297,6 +314,7 @@ const BudgetBuilder = () => {
             categories={categories}
             budgetItems={budgetItems}
             onAddToBudget={handleAddToBudget}
+            isLocked={['aprobado', 'finalizado', 'cancelado'].includes(project?.status)}
           />
 
           {/* Budget Summary Section */}
@@ -309,6 +327,7 @@ const BudgetBuilder = () => {
             onSave={handleSaveProject}
             initialDiscount={initialDiscount}
             project={project}
+            isLocked={['aprobado', 'finalizado', 'cancelado'].includes(project?.status)}
           />
         </div>
       </div>
@@ -321,6 +340,12 @@ const BudgetBuilder = () => {
       title="Vaciar presupuesto"
       message="¿Estás seguro de que deseas quitar todos los productos del presupuesto?"
       itemName={project?.name || ''}
+    />
+    <AIBudgetModal
+      isOpen={aiModal}
+      onClose={() => setAiModal(false)}
+      products={products}
+      onAddItems={handleAIAddItems}
     />
     </>
   );
