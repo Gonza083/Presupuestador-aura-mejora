@@ -567,6 +567,54 @@ export const projectsService = {
       console.error('Delete project error:', error);
       throw error;
     }
+  },
+
+  // Duplicate project (copies project data + all line items, resets to presupuestado)
+  async duplicate(projectId, newName) {
+    try {
+      const user = await getAuthenticatedUser();
+
+      // 1. Get source project
+      const { data: source, error: fetchError } = await supabase
+        ?.from('projects')?.select('*')?.eq('id', projectId)?.single();
+      if (fetchError) throw fetchError;
+
+      // 2. Create new project
+      const { data: newProject, error: createError } = await supabase
+        ?.from('projects')?.insert({
+          user_id: user?.id,
+          name: newName,
+          description: source?.description || null,
+          client: source?.client || null,
+          status: 'presupuestado',
+          start_date: null,
+          end_date: null
+        })?.select()?.single();
+      if (createError) throw createError;
+
+      // 3. Copy line items
+      const { data: sourceItems } = await supabase
+        ?.from('line_items')?.select('*')?.eq('project_id', projectId);
+
+      if (sourceItems && sourceItems.length > 0) {
+        const newItems = sourceItems.map(item => ({
+          project_id: newProject.id,
+          product_id: item.product_id || null,
+          category: item.category,
+          name: item.name,
+          quantity: item.quantity,
+          unit_cost: item.unit_cost,
+          labor: item.labor,
+          markup: item.markup
+        }));
+        await supabase?.from('line_items')?.insert(newItems);
+      }
+
+      return newProject;
+    } catch (error) {
+      console.error('Duplicate project error:', error);
+      throw error;
+    }
   }
 };
 
@@ -1201,6 +1249,56 @@ export const subscribeToCategories = (userId, callback) => {
 export const unsubscribeChannel = (subscription) => {
   if (subscription) {
     supabase?.removeChannel(subscription);
+  }
+};
+
+// =====================================================
+// DASHBOARD STATS SERVICE
+// =====================================================
+
+export const dashboardService = {
+  async getStats() {
+    try {
+      const user = await getAuthenticatedUser();
+
+      const [
+        { count: productsCount },
+        { count: categoriesCount },
+        { data: projectRows },
+        { data: accountRows }
+      ] = await Promise.all([
+        supabase.from('products').select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id).is('deleted_at', null),
+        supabase.from('categories').select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id).is('deleted_at', null),
+        supabase.from('projects').select('status')
+          .eq('user_id', user.id).is('deleted_at', null),
+        supabase.from('payment_accounts').select('total_amount, paid_amount')
+          .eq('user_id', user.id).is('deleted_at', null)
+      ]);
+
+      // Project counts by status
+      const projectCounts = (projectRows || []).reduce((acc, p) => {
+        acc[p.status] = (acc[p.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Payment totals
+      const totalPending = (accountRows || []).reduce((s, a) => s + Math.max(0, Number(a.total_amount) - Number(a.paid_amount)), 0);
+      const totalCollected = (accountRows || []).reduce((s, a) => s + Number(a.paid_amount), 0);
+
+      return {
+        products: productsCount || 0,
+        categories: categoriesCount || 0,
+        projectCounts,
+        totalProjects: (projectRows || []).length,
+        totalPending,
+        totalCollected
+      };
+    } catch (error) {
+      console.error('Dashboard stats error:', error);
+      return null;
+    }
   }
 };
 

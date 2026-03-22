@@ -18,6 +18,7 @@ const ProjectsMain = () => {
   const [deleteModal, setDeleteModal] = useState({ open: false, projectId: null, projectName: '', loading: false, error: null });
   const [createModal, setCreateModal] = useState({ open: false, name: '', loading: false, error: null });
   const [statusModal, setStatusModal] = useState({ open: false, projectId: null, projectName: '', newStatus: null, loading: false });
+  const [duplicateModal, setDuplicateModal] = useState({ open: false, projectId: null, newName: '', loading: false, error: null });
 
   // Load projects on mount
   useEffect(() => {
@@ -113,27 +114,24 @@ const ProjectsMain = () => {
     navigate(`/project-detail-editor/${projectId}`);
   };
 
-  const handleDuplicateProject = async (projectId) => {
-    try {
-      const project = projects?.find(p => p?.id === projectId);
-      if (project) {
-        const duplicated = await projectsService?.create({
-          name: `${project?.name} (Copia)`,
-          description: project?.description,
-          client: project?.client,
-          projectType: project?.project_type,
-          status: 'active',
-          startDate: project?.start_date,
-          endDate: project?.end_date
-        });
+  const handleDuplicateProject = (projectId) => {
+    const project = projects?.find(p => p?.id === projectId);
+    setDuplicateModal({ open: true, projectId, newName: `${project?.name} (Copia)`, loading: false, error: null });
+  };
 
-        if (duplicated) {
-          await loadProjects();
-        }
-      }
+  const confirmDuplicateProject = async () => {
+    if (!duplicateModal.newName.trim()) {
+      setDuplicateModal(prev => ({ ...prev, error: 'El nombre del proyecto es requerido' }));
+      return;
+    }
+    setDuplicateModal(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const newProject = await projectsService?.duplicate(duplicateModal.projectId, duplicateModal.newName.trim());
+      setDuplicateModal({ open: false, projectId: null, newName: '', loading: false, error: null });
+      if (newProject) navigate(`/budget-builder/${newProject.id}`);
     } catch (err) {
       console.error('Duplicate project error:', err);
-      setError('Error al duplicar el proyecto');
+      setDuplicateModal(prev => ({ ...prev, loading: false, error: 'Error al duplicar el proyecto' }));
     }
   };
 
@@ -332,6 +330,49 @@ const ProjectsMain = () => {
       loading={deleteModal.loading}
       error={deleteModal.error}
     />
+
+    {duplicateModal.open && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !duplicateModal.loading && setDuplicateModal({ open: false, projectId: null, newName: '', loading: false, error: null })} />
+        <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <Icon name="Copy" size={20} className="text-accent" />
+            </div>
+            <div>
+              <h2 className="text-lg font-heading font-semibold text-foreground">Duplicar proyecto</h2>
+              <p className="text-sm text-muted-foreground">Se copiarán todos los items del presupuesto</p>
+            </div>
+          </div>
+
+          {duplicateModal.error && (
+            <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-lg flex items-center gap-2">
+              <Icon name="AlertCircle" size={16} className="text-error flex-shrink-0" />
+              <p className="text-sm text-error">{duplicateModal.error}</p>
+            </div>
+          )}
+
+          <label className="block text-sm font-medium text-foreground mb-1.5">Nombre del nuevo proyecto</label>
+          <Input
+            type="text"
+            value={duplicateModal.newName}
+            onChange={(e) => setDuplicateModal(prev => ({ ...prev, newName: e.target.value }))}
+            onKeyDown={(e) => e.key === 'Enter' && confirmDuplicateProject()}
+            autoFocus
+            disabled={duplicateModal.loading}
+          />
+
+          <div className="flex justify-end gap-3 mt-5">
+            <Button variant="outline" onClick={() => setDuplicateModal({ open: false, projectId: null, newName: '', loading: false, error: null })} disabled={duplicateModal.loading}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmDuplicateProject} disabled={duplicateModal.loading} iconName={duplicateModal.loading ? 'Loader2' : 'Copy'} className={duplicateModal.loading ? '[&_svg]:animate-spin' : ''}>
+              {duplicateModal.loading ? 'Duplicando...' : 'Duplicar'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
 
     {statusModal.open && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

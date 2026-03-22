@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { User, LogOut } from 'lucide-react';
 
 import NavigationCard from '../../components/ui/NavigationCard';
 import UserRoleIndicator from './components/UserRoleIndicator';
+import { dashboardService } from '../../services/supabaseService';
+
+const fmtUSD = (n) =>
+  new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 
 const LandingDashboard = () => {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    dashboardService.getStats().then(setStats);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,6 +68,10 @@ const LandingDashboard = () => {
             description="Organiza y administra tus productos por categorías"
             iconName="FolderTree"
             route="/product-management"
+            metrics={stats ? [
+              { label: 'Categorías', value: stats.categories },
+              { label: 'Productos', value: stats.products },
+            ] : undefined}
           />
 
           <NavigationCard
@@ -66,6 +79,11 @@ const LandingDashboard = () => {
             description="Crea y gestiona presupuestos para tus instalaciones"
             iconName="Briefcase"
             route="/projects-main"
+            metrics={stats ? [
+              { label: 'Total', value: stats.totalProjects },
+              { label: 'Presupuestados', value: stats.projectCounts?.presupuestado || 0 },
+              { label: 'Aprobados', value: stats.projectCounts?.aprobado || 0, status: stats.projectCounts?.aprobado > 0 ? 'success' : undefined },
+            ] : undefined}
           />
 
           <NavigationCard
@@ -73,6 +91,10 @@ const LandingDashboard = () => {
             description="Seguimiento de pagos y comprobantes de todos los proyectos"
             iconName="Wallet"
             route="/cobranzas"
+            metrics={stats ? [
+              { label: 'Cobrado', value: fmtUSD(stats.totalCollected), status: 'success' },
+              { label: 'Pendiente', value: fmtUSD(stats.totalPending), status: stats.totalPending > 0 ? 'warning' : undefined },
+            ] : undefined}
           />
         </div>
 
