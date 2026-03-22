@@ -409,6 +409,42 @@ export const productsService = {
       console.error('Permanent delete product error:', error);
       throw error;
     }
+  },
+
+  // Bulk create products from Excel import
+  async bulkCreate(productsArray) {
+    try {
+      const user = await getAuthenticatedUser();
+
+      const dbItems = productsArray.map((p, i) => ({
+        user_id: user.id,
+        category_id: p.categoryId,
+        name: p.name,
+        code: p.code || `IMP-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+        description: p.description || null,
+        image: null,
+        alt: null,
+        has_pdf: false,
+        technical_pdf: null,
+        final_price: p.finalPrice,
+        cost: p.cost,
+        labor: p.labor,
+        profit: p.profit
+      }));
+
+      const { data, error } = await supabase?.from('products')?.insert(dbItems)?.select();
+
+      if (error) {
+        if (isSchemaError(error)) throw error;
+        console.error('Bulk create products error:', error?.message);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Bulk create products error:', error);
+      throw error;
+    }
   }
 };
 

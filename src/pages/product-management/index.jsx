@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import CategoryAccordion from './components/CategoryAccordion';
 import AddCategoryModal from './components/AddCategoryModal';
+import ImportProductsModal from './components/ImportProductsModal';
 import { categoriesService, productsService, subscribeToCategories, subscribeToProducts, unsubscribeChannel } from '../../services/supabaseService';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -14,6 +15,7 @@ const ProductManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -180,6 +182,13 @@ const ProductManagement = () => {
                 Papelera
               </Button>
               <Button
+                variant="outline"
+                size="default"
+                iconName="FileSpreadsheet"
+                onClick={() => setIsImportModalOpen(true)}>
+                Importar Excel
+              </Button>
+              <Button
                 variant="default"
                 size="default"
                 iconName="FolderPlus"
@@ -238,10 +247,16 @@ const ProductManagement = () => {
         </div>
       </main>
 
-      {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
+        onSuccess={loadData}
+      />
+
+      <ImportProductsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        existingCategories={categories}
         onSuccess={loadData}
       />
     </div>
