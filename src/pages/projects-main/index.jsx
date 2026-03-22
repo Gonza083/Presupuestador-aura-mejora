@@ -60,15 +60,23 @@ const ProjectsMain = () => {
     }
   };
 
-  // Filter projects based on search query
+  const STATUS_FILTERS = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'presupuestado', label: 'Presupuestados' },
+    { value: 'aprobado', label: 'Aprobados' },
+    { value: 'finalizado', label: 'Finalizados' },
+    { value: 'cancelado', label: 'Cancelados' },
+  ];
+
   const filteredProjects = projects?.filter(project => {
+    const matchesStatus = statusFilter === 'todos' || project?.status === statusFilter;
+    if (!matchesStatus) return false;
     if (!searchQuery?.trim()) return true;
     const query = searchQuery?.toLowerCase();
     return (
       project?.name?.toLowerCase()?.includes(query) ||
       project?.description?.toLowerCase()?.includes(query) ||
-      project?.client?.toLowerCase()?.includes(query) ||
-      project?.project_type?.toLowerCase()?.includes(query)
+      project?.client?.toLowerCase()?.includes(query)
     );
   });
 
@@ -222,7 +230,7 @@ const ProjectsMain = () => {
 
         {/* Section Header */}
         <div>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">
               {filteredProjects?.length} {filteredProjects?.length === 1 ? 'proyecto' : 'proyectos'}
             </h2>
@@ -237,13 +245,40 @@ const ProjectsMain = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, cliente o tipo…"
+                  placeholder="Buscar por nombre o cliente…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e?.target?.value)}
                   className="w-full h-10 pl-10 pr-4 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
               </div>
             </div>
+          </div>
+
+          {/* Status filter tabs */}
+          <div className="flex items-center gap-1.5 mb-5 flex-wrap">
+            {STATUS_FILTERS.map(({ value, label }) => {
+              const count = value === 'todos'
+                ? projects.length
+                : projects.filter(p => p.status === value).length;
+              return (
+                <button
+                  key={value}
+                  onClick={() => setStatusFilter(value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    statusFilter === value
+                      ? 'bg-accent text-white'
+                      : 'bg-white border border-border text-muted-foreground hover:text-foreground hover:border-accent/40'
+                  }`}
+                >
+                  {label}
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    statusFilter === value ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Projects List */}
