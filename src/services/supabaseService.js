@@ -662,7 +662,7 @@ export const lineItemsService = {
   // Get all line items for a project
   async getByProject(projectId) {
     try {
-      const { data, error } = await supabase?.from('line_items')?.select('*')?.eq('project_id', projectId)?.order('created_at', { ascending: true });
+      const { data, error } = await supabase?.from('line_items')?.select('*')?.eq('project_id', projectId)?.is('deleted_at', null)?.order('created_at', { ascending: true });
 
       if (error) {
         if (isSchemaError(error)) throw error;
@@ -729,10 +729,15 @@ export const lineItemsService = {
     }
   },
 
-  // Delete line item
+  // Delete line item (soft delete)
   async delete(lineItemId) {
     try {
-      const { error } = await supabase?.from('line_items')?.delete()?.eq('id', lineItemId);
+      const user = await getAuthenticatedUser();
+
+      const { error } = await supabase?.from('line_items')?.update({
+        deleted_at: new Date()?.toISOString(),
+        deleted_by: user?.id
+      })?.eq('id', lineItemId);
 
       if (error) {
         if (isSchemaError(error)) throw error;
@@ -805,7 +810,7 @@ export const budgetCategoriesService = {
   // Get all budget categories for a project
   async getByProject(projectId) {
     try {
-      const { data, error } = await supabase?.from('budget_categories')?.select('*')?.eq('project_id', projectId)?.order('created_at', { ascending: true });
+      const { data, error } = await supabase?.from('budget_categories')?.select('*')?.eq('project_id', projectId)?.is('deleted_at', null)?.order('created_at', { ascending: true });
 
       if (error) {
         if (isSchemaError(error)) throw error;
@@ -868,10 +873,15 @@ export const budgetCategoriesService = {
     }
   },
 
-  // Delete budget category
+  // Delete budget category (soft delete)
   async delete(budgetCategoryId) {
     try {
-      const { error } = await supabase?.from('budget_categories')?.delete()?.eq('id', budgetCategoryId);
+      const user = await getAuthenticatedUser();
+
+      const { error } = await supabase?.from('budget_categories')?.update({
+        deleted_at: new Date()?.toISOString(),
+        deleted_by: user?.id
+      })?.eq('id', budgetCategoryId);
 
       if (error) {
         if (isSchemaError(error)) throw error;

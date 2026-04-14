@@ -40,6 +40,7 @@ const CobranzasPage = () => {
   const [error, setError] = useState(null);
   const [modal, setModal] = useState({ open: false, account: null, loading: false });
   const [filter, setFilter] = useState('all'); // all | pendiente | parcial | saldado
+  const [searchQuery, setSearchQuery] = useState('');
   const [showAmounts, setShowAmounts] = useState(() => {
     return localStorage.getItem(AMOUNTS_KEY) === 'true';
   });
@@ -133,7 +134,16 @@ const CobranzasPage = () => {
   const totalCobrado = accounts.reduce((s, a) => s + Number(a.paid_amount), 0);
   const totalPendiente = totalPresupuestado - totalCobrado;
 
-  const filtered = filter === 'all' ? accounts : accounts.filter(a => a.status === filter);
+  const filtered = accounts.filter(a => {
+    const matchesStatus = filter === 'all' || a.status === filter;
+    if (!matchesStatus) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      a.projects?.name?.toLowerCase().includes(q) ||
+      a.projects?.client?.toLowerCase().includes(q)
+    );
+  });
 
   if (loading) {
     return (
@@ -204,6 +214,26 @@ const CobranzasPage = () => {
               {accounts.filter(a => a.status !== 'saldado').length} cuenta{accounts.filter(a => a.status !== 'saldado').length !== 1 ? 's' : ''} activa{accounts.filter(a => a.status !== 'saldado').length !== 1 ? 's' : ''}
             </p>
           </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar por proyecto o cliente…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-9 pr-4 rounded-lg border border-input bg-white text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <Icon name="X" size={14} />
+            </button>
+          )}
         </div>
 
         {/* Filter tabs */}

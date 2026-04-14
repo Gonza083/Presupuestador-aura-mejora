@@ -301,6 +301,7 @@ const ProjectsMain = () => {
                   onDuplicate={handleDuplicateProject}
                   onDelete={handleDeleteProject}
                   onStatusChange={handleStatusChange}
+                  onCobranzas={(id) => navigate(`/project-detail-editor/${id}?tab=cobranzas`)}
                   formatDate={formatDate}
                 />
               ))}

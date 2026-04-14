@@ -12,7 +12,9 @@ const STATUS_CONFIG = {
 
 const ALL_STATUSES = ['presupuestado', 'aprobado', 'finalizado', 'cancelado'];
 
-const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, onStatusChange, formatDate }) => {
+const HAS_ACCOUNT_STATUSES = ['aprobado', 'en_proceso', 'finalizado'];
+
+const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, onStatusChange, onCobranzas, formatDate }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const currentStatus = project?.status || 'active';
@@ -126,6 +128,15 @@ const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, onStatusC
 
         {/* Right: actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0">
+          {HAS_ACCOUNT_STATUSES.includes(currentStatus) && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onCobranzas(project?.id); }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-violet-600 hover:bg-violet-50 transition-colors"
+              title="Cuenta corriente"
+            >
+              <Icon name="Wallet" size={15} />
+            </button>
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(project?.id); }}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

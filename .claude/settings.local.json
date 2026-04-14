@@ -9,7 +9,17 @@
       "WebFetch(domain:www.aurahogar.com)",
       "Bash(grep -rl \"currency: ''''ARS''''\\\\|currency: ''''EUR''''\\\\|es-AR\\\\|''''es-ES''''.*currency\" src/)",
       "Bash(cd:*)",
-      "Skill(claude-api)"
+      "Skill(claude-api)",
+      "Bash(claude mcp:*)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__pause_project",
+      "mcp__supabase__restore_project",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__get_advisors",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration",
+      "Bash(python3:*)",
+      "Bash(node:*)"
     ]
   }
 }

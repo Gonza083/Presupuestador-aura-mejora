@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -141,7 +141,9 @@ const CreateProjectForm = () => {
 
 const EditProjectView = ({ projectId }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('info');
+  const [searchParams] = useSearchParams();
+  const initialTab = TABS.some(t => t.id === searchParams.get('tab')) ? searchParams.get('tab') : 'info';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
