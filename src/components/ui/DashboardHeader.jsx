@@ -20,9 +20,6 @@ const DashboardHeader = () => {
 
   const handleSearchSubmit = (e) => {
     e?.preventDefault();
-    if (searchQuery?.trim()) {
-      console.log('Search query:', searchQuery);
-    }
   };
 
   return (

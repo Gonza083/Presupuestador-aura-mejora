@@ -140,6 +140,13 @@ const TimelineTab = ({ projectId }) => {
 
       {/* Timeline */}
       <div className="space-y-4">
+        {milestones?.length === 0 && (
+          <div className="bg-white rounded-lg border border-border shadow-sm py-14 text-center">
+            <Icon name="CalendarDays" size={40} className="text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-base font-medium text-foreground mb-1">Sin hitos definidos</p>
+            <p className="text-sm text-muted-foreground">Agregá el primer hito para armar el cronograma del proyecto.</p>
+          </div>
+        )}
         {milestones?.map((milestone, index) => {
           const statusConfig = getStatusConfig(milestone?.status);
           const duration = calculateDuration(milestone?.startDate, milestone?.endDate);

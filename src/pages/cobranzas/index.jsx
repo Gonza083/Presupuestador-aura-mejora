@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 import { paymentAccountsService, paymentsService } from '../../services/supabaseService';
 import { generateReceiptPdf } from '../../utils/receiptPdf';
 import AddPaymentModal from '../project-detail-editor/components/AddPaymentModal';
+import DeleteConfirmModal from '../product-management/components/DeleteConfirmModal';
 
 const fmt = (n) =>
   new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n ?? 0);
@@ -39,6 +40,7 @@ const CobranzasPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modal, setModal] = useState({ open: false, account: null, loading: false });
+  const [deletePaymentModal, setDeletePaymentModal] = useState({ open: false, paymentId: null, accountId: null, loading: false });
   const [filter, setFilter] = useState('all'); // all | pendiente | parcial | saldado
   const [searchQuery, setSearchQuery] = useState('');
   const [showAmounts, setShowAmounts] = useState(() => {
@@ -120,13 +122,23 @@ const CobranzasPage = () => {
     generateReceiptPdf({ receipt: payment, project: account.projects, account });
   };
 
-  const handleDeletePayment = async (paymentId, accountId) => {
-    if (!window.confirm('¿Anular este pago?')) return;
-    await paymentsService.softDelete(paymentId, accountId);
-    const updatedAccounts = await paymentAccountsService.getAll();
-    setAccounts(updatedAccounts);
-    const updatedPayments = await paymentsService.getByAccount(accountId);
-    setPayments(prev => ({ ...prev, [accountId]: updatedPayments }));
+  const handleDeletePayment = (paymentId, accountId) => {
+    setDeletePaymentModal({ open: true, paymentId, accountId, loading: false });
+  };
+
+  const confirmDeletePayment = async () => {
+    setDeletePaymentModal(prev => ({ ...prev, loading: true }));
+    try {
+      await paymentsService.softDelete(deletePaymentModal.paymentId, deletePaymentModal.accountId);
+      const updatedAccounts = await paymentAccountsService.getAll();
+      setAccounts(updatedAccounts);
+      const updatedPayments = await paymentsService.getByAccount(deletePaymentModal.accountId);
+      setPayments(prev => ({ ...prev, [deletePaymentModal.accountId]: updatedPayments }));
+      setDeletePaymentModal({ open: false, paymentId: null, accountId: null, loading: false });
+    } catch (err) {
+      console.error(err);
+      setDeletePaymentModal(prev => ({ ...prev, loading: false }));
+    }
   };
 
   // Summary stats
@@ -359,7 +371,8 @@ const CobranzasPage = () => {
                       {accountPayments.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-6">Sin pagos registrados.</p>
                       ) : (
-                        <table className="w-full text-sm">
+                        <div className="overflow-x-auto">
+                        <table className="w-full text-sm min-w-[480px]">
                           <thead>
                             <tr className="border-b border-border">
                               <th className="text-left px-5 py-2 text-xs font-semibold text-muted-foreground">Comprobante</th>
@@ -398,6 +411,7 @@ const CobranzasPage = () => {
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       )}
                     </div>
                   )}
@@ -414,6 +428,15 @@ const CobranzasPage = () => {
         onConfirm={handleAddPayment}
         maxAmount={modal.account ? modal.account.total_amount - modal.account.paid_amount : 0}
         loading={modal.loading}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deletePaymentModal.open}
+        onClose={() => setDeletePaymentModal({ open: false, paymentId: null, accountId: null, loading: false })}
+        onConfirm={confirmDeletePayment}
+        title="Anular pago"
+        message="¿Estás seguro de que querés anular este pago? Esta acción no se puede deshacer."
+        loading={deletePaymentModal.loading}
       />
     </div>
   );

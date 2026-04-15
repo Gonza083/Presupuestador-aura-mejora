@@ -10,7 +10,7 @@ const STATUS_CONFIG = {
   active:        { label: 'Presupuestado', badge: 'bg-blue-50 text-blue-700',    border: 'border-l-blue-400' },
 };
 
-const ALL_STATUSES = ['presupuestado', 'aprobado', 'finalizado', 'cancelado'];
+const ALL_STATUSES = ['presupuestado', 'aprobado', 'en_proceso', 'finalizado', 'cancelado'];
 
 const HAS_ACCOUNT_STATUSES = ['aprobado', 'en_proceso', 'finalizado'];
 

@@ -37,6 +37,9 @@ export const AuthProvider = ({ children }) => {
       if (_event === 'SIGNED_OUT' && !isSigningOutRef.current) {
         setSessionExpired(true);
       }
+      if (_event === 'SIGNED_IN') {
+        setSessionExpired(false);
+      }
       isSigningOutRef.current = false;
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -69,6 +72,7 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
         options: {
+          emailRedirectTo: window.location.origin,
           data: {
             full_name: fullName,
             role: 'user'

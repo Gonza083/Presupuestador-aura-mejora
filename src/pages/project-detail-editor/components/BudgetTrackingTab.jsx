@@ -175,6 +175,12 @@ const BudgetTrackingTab = ({ projectId }) => {
           Desglose por Categoría
         </h3>
         <div className="space-y-4">
+          {budgetData?.categories?.length === 0 && (
+            <div className="py-10 text-center">
+              <Icon name="BarChart2" size={32} className="text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No hay categorías de seguimiento cargadas todavía.</p>
+            </div>
+          )}
           {budgetData?.categories?.map((category) => {
             const percentage = calculatePercentage(category?.spent, category?.allocated);
             const variance = calculateVariance(category?.allocated, category?.spent);

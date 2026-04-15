@@ -162,7 +162,7 @@ const LineItemsTab = ({ projectId }) => {
       {/* Spreadsheet Table */}
       <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[640px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">

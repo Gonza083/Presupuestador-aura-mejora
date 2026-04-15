@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button';
 import { paymentAccountsService, paymentsService, lineItemsService } from '../../../services/supabaseService';
 import { generateReceiptPdf } from '../../../utils/receiptPdf';
 import AddPaymentModal from './AddPaymentModal';
+import DeleteConfirmModal from '../../product-management/components/DeleteConfirmModal';
 
 const fmt = (n) =>
   new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n ?? 0);
@@ -35,6 +36,7 @@ const CobranzasTab = ({ projectId, project }) => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ open: false, paymentId: null, loading: false });
   const [error, setError] = useState(null);
 
   const isApproved = project?.status === 'aprobado' ||
@@ -116,18 +118,24 @@ const CobranzasTab = ({ projectId, project }) => {
     }
   };
 
-  const handleDeletePayment = async (paymentId) => {
-    if (!window.confirm('¿Seguro que querés anular este pago? La operación no se puede deshacer.')) return;
+  const handleDeletePayment = (paymentId) => {
+    setDeleteModal({ open: true, paymentId, loading: false });
+  };
+
+  const confirmDeletePayment = async () => {
+    setDeleteModal(prev => ({ ...prev, loading: true }));
     try {
-      setDeletingId(paymentId);
+      setDeletingId(deleteModal.paymentId);
       setError(null);
-      await paymentsService.softDelete(paymentId, account.id);
+      await paymentsService.softDelete(deleteModal.paymentId, account.id);
       const updatedAccount = await paymentAccountsService.getByProject(projectId);
       setAccount(updatedAccount);
-      setPayments(prev => prev.filter(p => p.id !== paymentId));
+      setPayments(prev => prev.filter(p => p.id !== deleteModal.paymentId));
+      setDeleteModal({ open: false, paymentId: null, loading: false });
     } catch (err) {
       console.error(err);
       setError('Error al anular el pago.');
+      setDeleteModal(prev => ({ ...prev, loading: false }));
     } finally {
       setDeletingId(null);
     }
@@ -318,6 +326,15 @@ const CobranzasTab = ({ projectId, project }) => {
         onConfirm={handleAddPayment}
         maxAmount={remaining}
         loading={paymentLoading}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, paymentId: null, loading: false })}
+        onConfirm={confirmDeletePayment}
+        title="Anular pago"
+        message="¿Estás seguro de que querés anular este pago? Esta acción no se puede deshacer."
+        loading={deleteModal.loading}
       />
     </div>
   );

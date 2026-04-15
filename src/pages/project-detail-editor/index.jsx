@@ -217,7 +217,7 @@ const EditProjectView = ({ projectId }) => {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 mt-5 -mb-px">
+          <div className="flex items-center gap-1 mt-5 -mb-px overflow-x-auto">
             {TABS.map((tab) => (
               <button
                 key={tab.id}

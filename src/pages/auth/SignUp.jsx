@@ -81,7 +81,7 @@ const SignUp = () => {
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm text-green-800 font-medium">¡Cuenta creada exitosamente!</p>
-                <p className="text-xs text-green-700 mt-1">Redirigiendo al inicio de sesión...</p>
+                <p className="text-xs text-green-700 mt-1">Revisá tu email y confirmá tu cuenta antes de iniciar sesión.</p>
               </div>
             </div>
           )}

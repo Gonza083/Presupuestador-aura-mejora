@@ -22,7 +22,9 @@ const LandingDashboard = () => {
   });
 
   useEffect(() => {
-    dashboardService.getStats().then(setStats);
+    dashboardService.getStats().then(setStats).catch(() => {
+      // stats remain null — cards render without metrics, no crash
+    });
   }, []);
 
   const toggleAmounts = () => {

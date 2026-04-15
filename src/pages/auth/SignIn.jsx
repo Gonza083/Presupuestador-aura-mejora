@@ -32,7 +32,7 @@ const SignIn = () => {
     }
 
     if (data?.user) {
-      navigate('/landing-dashboard');
+      navigate(location?.state?.from || '/landing-dashboard', { replace: true });
     }
     setLoading(false);
   };
