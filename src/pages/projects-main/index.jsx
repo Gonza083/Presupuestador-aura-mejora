@@ -64,6 +64,7 @@ const ProjectsMain = () => {
     { value: 'todos', label: 'Todos' },
     { value: 'presupuestado', label: 'Presupuestados' },
     { value: 'aprobado', label: 'Aprobados' },
+    { value: 'en_proceso', label: 'En proceso' },
     { value: 'finalizado', label: 'Finalizados' },
     { value: 'cancelado', label: 'Cancelados' },
   ];

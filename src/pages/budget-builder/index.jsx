@@ -17,6 +17,7 @@ const BudgetBuilder = () => {
   const [categories, setCategories] = useState([]);
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [viewMode, setViewMode] = useState('client'); // 'client' or 'internal'
@@ -195,7 +196,7 @@ const BudgetBuilder = () => {
     if (!projectId) return;
 
     try {
-      setLoading(true);
+      setSaving(true);
       setSuccessMessage(null);
       setError(null);
 
@@ -209,19 +210,13 @@ const BudgetBuilder = () => {
       // 2. Save Line Items (Replace)
       await lineItemsService?.replaceForProject(projectId, budgetItems);
 
-      setSuccessMessage('Proyecto guardado correctamente');
-
-      // Hide success message after 3s
+      setSuccessMessage('Guardado');
       timeoutRef.current = setTimeout(() => setSuccessMessage(null), 3000);
-
-      // Reload data to get fresh IDs? 
-      // useful but might reset UI state. 
-      // Ideally we just continue.
     } catch (err) {
       console.error('Save error:', err);
-      setError('Error al guardar el proyecto');
+      setError('Error al guardar');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -325,6 +320,7 @@ const BudgetBuilder = () => {
             onRemoveItem={handleRemoveItem}
             onClearBudget={handleClearBudget}
             onSave={handleSaveProject}
+            saving={saving}
             initialDiscount={initialDiscount}
             project={project}
             isLocked={['aprobado', 'finalizado', 'cancelado'].includes(project?.status)}

@@ -70,12 +70,22 @@ const CobranzasTab = ({ projectId, project }) => {
       setCreating(true);
       setError(null);
 
-      // Calculate total from line_items
-      const items = await lineItemsService.getByProject(projectId);
-      const total = items.reduce((sum, item) => {
-        const unitPrice = Number(item.unit_cost) * (1 + Number(item.markup) / 100);
-        return sum + unitPrice * Number(item.quantity);
-      }, 0);
+      // Prefer project.total (already includes discount from budget builder).
+      // Fall back to recalculating from line items only if project.total is missing.
+      let total = Number(project?.total) || 0;
+
+      if (total <= 0) {
+        const items = await lineItemsService.getByProject(projectId);
+        total = items.reduce((sum, item) => {
+          const unitPrice = Number(item.unit_cost) * (1 + Number(item.markup) / 100);
+          return sum + unitPrice * Number(item.quantity);
+        }, 0);
+      }
+
+      if (total <= 0) {
+        setError('El presupuesto no tiene monto. Guardá el presupuesto desde el armador antes de generar la cuenta corriente.');
+        return;
+      }
 
       const acc = await paymentAccountsService.create(projectId, total);
       setAccount(acc);

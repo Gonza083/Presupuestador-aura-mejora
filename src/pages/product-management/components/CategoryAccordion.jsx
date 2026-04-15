@@ -148,7 +148,11 @@ const CategoryAccordion = ({ category, isExpanded, onToggle, searchQuery, allCat
         onClose={() => { setIsDeleteModalOpen(false); setDeleteError(null); }}
         onConfirm={handleDeleteCategory}
         title="Eliminar Categoría"
-        message="¿Estás seguro de que deseas eliminar esta categoría?"
+        message={
+          category?.productCount > 0
+            ? `Esta categoría tiene ${category.productCount} producto${category.productCount !== 1 ? 's' : ''}. Al eliminarla, los productos quedarán sin categoría asignada.`
+            : '¿Estás seguro de que deseas eliminar esta categoría?'
+        }
         itemName={category?.name}
         loading={deleteLoading}
         error={deleteError}

@@ -5,7 +5,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import BudgetItem from './BudgetItem';
 
-const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, initialDiscount = 0, project, isLocked = false }) => {
+const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, saving = false, initialDiscount = 0, project, isLocked = false }) => {
   const [budgetDate, setBudgetDate] = useState(new Date()?.toISOString()?.split('T')?.[0]);
   const [discount, setDiscount] = useState(initialDiscount);
 
@@ -270,11 +270,12 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
           <div className="px-5 py-3 flex flex-col gap-2">
             {onSave && !isLocked && (
               <button
-                onClick={() => onSave({ subtotal, discount, grandTotal })}
-                className="w-full h-10 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"
+                onClick={() => !saving && onSave({ subtotal, discount, grandTotal })}
+                disabled={saving}
+                className="w-full h-10 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                <Icon name="Save" size={15} />
-                Guardar presupuesto
+                <Icon name={saving ? 'Loader2' : 'Save'} size={15} className={saving ? 'animate-spin' : ''} />
+                {saving ? 'Guardando...' : 'Guardar presupuesto'}
               </button>
             )}
             <div className="grid grid-cols-2 gap-2">
