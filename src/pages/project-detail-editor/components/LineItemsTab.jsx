@@ -3,11 +3,13 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { lineItemsService, subscribeToLineItems, unsubscribeChannel } from '../../../services/supabaseService';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const LineItemsTab = ({ projectId }) => {
   const [lineItems, setLineItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { formatAmount } = useCurrency();
 
   useEffect(() => {
     loadLineItems();
@@ -122,13 +124,6 @@ const LineItemsTab = ({ projectId }) => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD'
-    })?.format(amount);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -238,7 +233,7 @@ const LineItemsTab = ({ projectId }) => {
                     />
                   </td>
                   <td className="px-4 py-3 text-right font-semibold text-foreground">
-                    {formatCurrency(calculateItemTotal(item))}
+                    {formatAmount(calculateItemTotal(item))}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Button
@@ -258,7 +253,7 @@ const LineItemsTab = ({ projectId }) => {
                   Total General:
                 </td>
                 <td className="px-4 py-4 text-right font-bold text-xl text-accent">
-                  {formatCurrency(calculateGrandTotal())}
+                  {formatAmount(calculateGrandTotal())}
                 </td>
                 <td></td>
               </tr>

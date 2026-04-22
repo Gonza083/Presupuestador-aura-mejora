@@ -1,18 +1,11 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const ProductRow = ({ product, addedCount, onAddToBudget, isLocked = false }) => {
   const [imageError, setImageError] = useState(false);
   const [lightbox, setLightbox] = useState(false);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    })?.format(amount);
-  };
+  const { formatAmount: formatCurrency } = useCurrency();
 
   return (
     <>

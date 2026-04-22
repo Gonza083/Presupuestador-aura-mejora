@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 import { projectsService } from '../../../services/supabaseService';
 import { PROJECT_STATUS_OPTIONS } from '../../../utils/constants';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
+  const { setExchangeRate } = useCurrency();
+
+  // Sync project exchange rate into global context when project loads
+  useEffect(() => {
+    if (projectData?.exchange_rate) {
+      setExchangeRate(projectData.exchange_rate);
+    }
+  }, [projectData?.exchange_rate]);
 
   const handleInputChange = (field, value) => {
     setSaved(false);
@@ -28,13 +37,16 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
     try {
       setSaving(true);
       setError(null);
+      const rate = parseFloat(projectData?.exchange_rate) || 1200;
       await projectsService?.update(projectId, {
         name: projectData?.name,
         description: projectData?.description,
         client: projectData?.client,
         status: projectData?.status,
         startDate: projectData?.start_date,
+        exchangeRate: rate,
       });
+      setExchangeRate(rate);
       setSaved(true);
       if (onUpdate) onUpdate();
       setTimeout(() => setSaved(false), 2500);
@@ -124,6 +136,27 @@ const ProjectInfoTab = ({ projectData, setProjectData, projectId, onUpdate }) =>
               onChange={(e) => handleInputChange('startDate', e?.target?.value)}
               disabled={saving}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Tipo de cambio (ARS por USD)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">$</span>
+              <Input
+                type="number"
+                value={projectData?.exchange_rate ?? 1200}
+                onChange={(e) => handleInputChange('exchange_rate', parseFloat(e?.target?.value) || 1200)}
+                disabled={saving}
+                min="1"
+                step="1"
+                className="pl-7"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Se usa para mostrar montos en pesos en este presupuesto
+            </p>
           </div>
         </div>
       </div>

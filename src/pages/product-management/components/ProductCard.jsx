@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button';
 import EditProductModal from './EditProductModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { productsService } from '../../../services/supabaseService';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const ProductCard = ({ product, allCategories, onDataChange }) => {
   const [imageError, setImageError] = useState(false);
@@ -11,15 +12,7 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    })?.format(amount);
-  };
+  const { formatAmount } = useCurrency();
 
   const calculateMargin = () => {
     if (!product?.finalPrice) return '0.0';
@@ -135,7 +128,7 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Precio final</p>
               <p className="text-xl font-bold text-foreground">
-                {formatCurrency(product?.finalPrice)}
+                {formatAmount(product?.finalPrice)}
               </p>
             </div>
             <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
@@ -147,15 +140,15 @@ const ProductCard = ({ product, allCategories, onDataChange }) => {
           <div className="grid grid-cols-3 gap-1 pt-2 border-t border-border/50">
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Costo</p>
-              <p className="text-xs font-medium text-foreground">{formatCurrency(product?.cost)}</p>
+              <p className="text-xs font-medium text-foreground">{formatAmount(product?.cost)}</p>
             </div>
             <div className="text-center border-x border-border/50">
               <p className="text-xs text-muted-foreground">M.O.</p>
-              <p className="text-xs font-medium text-foreground">{formatCurrency(product?.labor)}</p>
+              <p className="text-xs font-medium text-foreground">{formatAmount(product?.labor)}</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Ganancia</p>
-              <p className="text-xs font-medium text-emerald-600">{formatCurrency(product?.profit)}</p>
+              <p className="text-xs font-medium text-emerald-600">{formatAmount(product?.profit)}</p>
             </div>
           </div>
 

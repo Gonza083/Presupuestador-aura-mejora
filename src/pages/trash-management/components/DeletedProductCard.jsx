@@ -1,18 +1,11 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const DeletedProductCard = ({ product, getRelativeTime, onRestore, onDeletePermanently, disabled }) => {
   const [imageError, setImageError] = useState(false);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    })?.format(amount);
-  };
+  const { formatAmount: formatCurrency } = useCurrency();
 
   return (
     <div className="bg-white rounded-lg border border-border shadow-sm hover:shadow-md transition-all duration-250 overflow-hidden">

@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
+import { fetchOfficialRate } from '../../../utils/exchangeRateApi';
 
 const PAYMENT_METHODS = [
   { value: 'transferencia', label: 'Transferencia bancaria' },
@@ -35,7 +36,7 @@ const AddPaymentModal = ({ isOpen, onClose, onConfirm, maxAmount, loading }) => 
   // Fetch official exchange rate when switching to ARS
   useEffect(() => {
     if (currency === 'ARS' && !exchangeRate) {
-      fetchExchangeRate();
+      fetchExchangeRateLocal();
     }
   }, [currency]);
 
@@ -50,15 +51,11 @@ const AddPaymentModal = ({ isOpen, onClose, onConfirm, maxAmount, loading }) => 
     }
   }, [isOpen]);
 
-  const fetchExchangeRate = async () => {
+  const fetchExchangeRateLocal = async () => {
     try {
       setExchangeLoading(true);
       setExchangeError(null);
-      const res = await fetch('https://api.bluelytics.com.ar/v2/latest');
-      if (!res.ok) throw new Error('No se pudo obtener el tipo de cambio');
-      const data = await res.json();
-      const rate = data?.oficial?.value_sell;
-      if (!rate) throw new Error('Datos de cambio no disponibles');
+      const rate = await fetchOfficialRate();
       setExchangeRate(rate);
     } catch (err) {
       setExchangeError('No se pudo obtener el dólar oficial. Podés ingresar en USD directamente.');

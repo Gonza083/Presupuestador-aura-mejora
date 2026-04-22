@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const BudgetItem = ({ item, viewMode, onUpdateQuantity, onRemove, isLocked = false }) => {
   const [imageError, setImageError] = useState(false);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    })?.format(amount);
-  };
+  const { formatAmount: formatCurrency } = useCurrency();
 
   const subtotal = item?.unitPrice * item?.quantity;
   const itemCost = item?.cost * item?.quantity;

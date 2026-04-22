@@ -558,6 +558,7 @@ export const projectsService = {
       if (updates?.status !== undefined) dbUpdates.status = updates?.status;
       if (updates?.startDate !== undefined) dbUpdates.start_date = updates?.startDate;
       if (updates?.endDate !== undefined) dbUpdates.end_date = updates?.endDate;
+      if (updates?.exchangeRate !== undefined) dbUpdates.exchange_rate = updates?.exchangeRate;
 
       // subtotal, discount, total temporarily removed until schema migration is verified
       /*

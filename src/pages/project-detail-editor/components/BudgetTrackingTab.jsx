@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { budgetCategoriesService, subscribeToBudgetCategories, unsubscribeChannel } from '../../../services/supabaseService';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const BudgetTrackingTab = ({ projectId }) => {
   const [budgetData, setBudgetData] = useState({ totalBudget: 0, totalSpent: 0, categories: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { formatAmount } = useCurrency();
 
   useEffect(() => {
     loadBudgetData();
@@ -80,13 +82,6 @@ const BudgetTrackingTab = ({ projectId }) => {
     return 'bg-success';
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD'
-    })?.format(amount);
-  };
-
   const overallPercentage = calculatePercentage(budgetData?.totalSpent, budgetData?.totalBudget);
   const overallVariance = calculateVariance(budgetData?.totalBudget, budgetData?.totalSpent);
 
@@ -125,16 +120,16 @@ const BudgetTrackingTab = ({ projectId }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Presupuesto Total</p>
-            <p className="text-2xl font-bold text-foreground">{formatCurrency(budgetData?.totalBudget)}</p>
+            <p className="text-2xl font-bold text-foreground">{formatAmount(budgetData?.totalBudget)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Total Gastado</p>
-            <p className="text-2xl font-bold text-accent">{formatCurrency(budgetData?.totalSpent)}</p>
+            <p className="text-2xl font-bold text-accent">{formatAmount(budgetData?.totalSpent)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Restante</p>
             <p className={`text-2xl font-bold ${overallVariance >= 0 ? 'text-success' : 'text-error'}`}>
-              {formatCurrency(overallVariance)}
+              {formatAmount(overallVariance)}
             </p>
           </div>
         </div>
@@ -200,16 +195,16 @@ const BudgetTrackingTab = ({ projectId }) => {
                 <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
                   <div>
                     <p className="text-muted-foreground">Asignado</p>
-                    <p className="font-semibold text-foreground">{formatCurrency(category?.allocated)}</p>
+                    <p className="font-semibold text-foreground">{formatAmount(category?.allocated)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Gastado</p>
-                    <p className="font-semibold text-accent">{formatCurrency(category?.spent)}</p>
+                    <p className="font-semibold text-accent">{formatAmount(category?.spent)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Restante</p>
                     <p className={`font-semibold ${variance >= 0 ? 'text-success' : 'text-error'}`}>
-                      {formatCurrency(variance)}
+                      {formatAmount(variance)}
                     </p>
                   </div>
                 </div>

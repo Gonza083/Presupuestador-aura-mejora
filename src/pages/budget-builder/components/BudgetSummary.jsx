@@ -4,23 +4,16 @@ import autoTable from 'jspdf-autotable';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import BudgetItem from './BudgetItem';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, onClearBudget, onSave, saving = false, initialDiscount = 0, project, isLocked = false }) => {
   const [budgetDate, setBudgetDate] = useState(new Date()?.toISOString()?.split('T')?.[0]);
   const [discount, setDiscount] = useState(initialDiscount);
+  const { formatAmount, displayCurrency, exchangeRate, toggleCurrency } = useCurrency();
 
   useEffect(() => {
     if (initialDiscount) setDiscount(initialDiscount);
   }, [initialDiscount]);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    })?.format(amount);
-  };
 
   const subtotal = budgetItems?.reduce((sum, item) => sum + (item?.unitPrice * item?.quantity), 0);
   const totalCosts = budgetItems?.reduce((sum, item) => sum + (item?.cost * item?.quantity), 0);
@@ -47,8 +40,8 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
       item.name,
       item.category || '-',
       item.quantity,
-      new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD' }).format(item.unitPrice),
-      new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD' }).format(item.unitPrice * item.quantity)
+      formatAmount(item.unitPrice),
+      formatAmount(item.unitPrice * item.quantity)
     ]);
 
     autoTable(doc, {
@@ -65,11 +58,11 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
     const textX = 140;
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(`Subtotal: ${formatCurrency(subtotal)}`, textX, finalY);
-    doc.text(`Descuento (${discount}%): -${formatCurrency(discountAmount)}`, textX, finalY + 6);
+    doc.text(`Subtotal: ${formatAmount(subtotal)}`, textX, finalY);
+    doc.text(`Descuento (${discount}%): -${formatAmount(discountAmount)}`, textX, finalY + 6);
     doc.setFontSize(14);
     doc.setTextColor(201, 169, 110);
-    doc.text(`Total Final: ${formatCurrency(grandTotal)}`, textX, finalY + 14);
+    doc.text(`Total Final: ${formatAmount(grandTotal)}`, textX, finalY + 14);
     doc.setFontSize(8);
     doc.setTextColor(150);
     doc.text("Documento generado automáticamente por Aura Hogar", 14, 280);
@@ -128,6 +121,13 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
               {budgetItems.length} {budgetItems.length === 1 ? 'ítem' : 'ítems'}
             </span>
           )}
+          <button
+            onClick={toggleCurrency}
+            title={displayCurrency === 'USD' ? `Ver en ARS (TC: $${exchangeRate.toLocaleString('es-AR')})` : 'Ver en USD'}
+            className="ml-1 flex items-center gap-1 px-2 py-0.5 rounded-full border border-border text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
+          >
+            {displayCurrency === 'USD' ? '🇺🇸 USD' : '🇦🇷 ARS'}
+          </button>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -206,7 +206,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
             {/* Subtotal */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Subtotal</span>
-              <span className="text-sm font-medium text-foreground">{formatCurrency(subtotal)}</span>
+              <span className="text-sm font-medium text-foreground">{formatAmount(subtotal)}</span>
             </div>
 
             {/* Discount */}
@@ -226,7 +226,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
                 </div>
               </div>
               <span className="text-sm font-medium text-error">
-                {discountAmount > 0 ? `-${formatCurrency(discountAmount)}` : '—'}
+                {discountAmount > 0 ? `-${formatAmount(discountAmount)}` : '—'}
               </span>
             </div>
 
@@ -237,15 +237,15 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-muted/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-muted-foreground mb-1">Costo material</p>
-                    <p className="text-sm font-bold text-foreground">{formatCurrency(totalCosts)}</p>
+                    <p className="text-sm font-bold text-foreground">{formatAmount(totalCosts)}</p>
                   </div>
                   <div className="bg-muted/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-muted-foreground mb-1">Mano de obra</p>
-                    <p className="text-sm font-bold text-foreground">{formatCurrency(totalLabor)}</p>
+                    <p className="text-sm font-bold text-foreground">{formatAmount(totalLabor)}</p>
                   </div>
                   <div className="bg-success/10 rounded-lg p-3 text-center">
                     <p className="text-xs text-success/80 mb-1">Ganancia</p>
-                    <p className="text-sm font-bold text-success">{formatCurrency(totalProfit)}</p>
+                    <p className="text-sm font-bold text-success">{formatAmount(totalProfit)}</p>
                     <p className="text-xs text-success/70 mt-0.5">{profitMargin}%</p>
                   </div>
                 </div>
@@ -261,7 +261,7 @@ const BudgetSummary = ({ budgetItems, viewMode, onUpdateQuantity, onRemoveItem, 
                 <p className="text-xs text-muted-foreground mt-0.5">{budgetItems.length} {budgetItems.length === 1 ? 'producto' : 'productos'}</p>
               </div>
               <span className="text-2xl font-heading font-bold text-accent">
-                {formatCurrency(grandTotal)}
+                {formatAmount(grandTotal)}
               </span>
             </div>
           </div>

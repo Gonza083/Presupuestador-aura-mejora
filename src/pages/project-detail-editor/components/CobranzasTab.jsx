@@ -5,9 +5,7 @@ import { paymentAccountsService, paymentsService, lineItemsService } from '../..
 import { generateReceiptPdf } from '../../../utils/receiptPdf';
 import AddPaymentModal from './AddPaymentModal';
 import DeleteConfirmModal from '../../product-management/components/DeleteConfirmModal';
-
-const fmt = (n) =>
-  new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n ?? 0);
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '—';
@@ -29,6 +27,8 @@ const STATUS_CONFIG = {
 };
 
 const CobranzasTab = ({ projectId, project }) => {
+  const { formatAmount } = useCurrency();
+  const fmt = formatAmount;
   const [account, setAccount] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);

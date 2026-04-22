@@ -7,15 +7,15 @@ import NavigationCard from '../../components/ui/NavigationCard';
 import UserRoleIndicator from './components/UserRoleIndicator';
 import Icon from '../../components/AppIcon';
 import { dashboardService } from '../../services/supabaseService';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 const AMOUNTS_KEY = 'aura_show_amounts';
-const fmtUSD = (n) =>
-  new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 const masked = '$ ••••••';
 
 const LandingDashboard = () => {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
+  const { formatAmount: fmtUSD, displayCurrency, toggleCurrency, exchangeRate } = useCurrency();
   const [stats, setStats] = useState(null);
   const [showAmounts, setShowAmounts] = useState(() => {
     return localStorage.getItem(AMOUNTS_KEY) === 'true';
@@ -55,6 +55,13 @@ const LandingDashboard = () => {
                 title={showAmounts ? 'Ocultar montos' : 'Mostrar montos'}
               >
                 <Icon name={showAmounts ? 'Eye' : 'EyeOff'} size={18} className="text-gray-500" />
+              </button>
+              <button
+                onClick={toggleCurrency}
+                title={displayCurrency === 'USD' ? `Cambiar a ARS (TC: $${exchangeRate.toLocaleString('es-AR')})` : 'Cambiar a USD'}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm font-medium text-gray-600"
+              >
+                {displayCurrency === 'USD' ? '🇺🇸 USD' : '🇦🇷 ARS'}
               </button>
 <UserRoleIndicator
                 userName={profile?.full_name}

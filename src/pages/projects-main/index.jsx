@@ -7,10 +7,13 @@ import ProjectCard from './components/ProjectCard';
 import { projectsService, subscribeToProjects, unsubscribeChannel } from '../../services/supabaseService';
 import { useAuth } from '../../contexts/AuthContext';
 import DeleteConfirmModal from '../product-management/components/DeleteConfirmModal';
+import { fetchOfficialRate } from '../../utils/exchangeRateApi';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 const ProjectsMain = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setExchangeRate: setGlobalExchangeRate } = useCurrency();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [projects, setProjects] = useState([]);
@@ -20,6 +23,8 @@ const ProjectsMain = () => {
   const [createModal, setCreateModal] = useState({ open: false, name: '', loading: false, error: null });
   const [statusModal, setStatusModal] = useState({ open: false, projectId: null, projectName: '', newStatus: null, loading: false });
   const [duplicateModal, setDuplicateModal] = useState({ open: false, projectId: null, newName: '', loading: false, error: null });
+  // TC modal: ver y editar el tipo de cambio de un proyecto
+  const [tcModal, setTcModal] = useState({ open: false, projectId: null, projectName: '', currentRate: null, newRate: '', fetchLoading: false, saveLoading: false, error: null, fetchError: null });
 
   // Load projects on mount
   useEffect(() => {
@@ -102,11 +107,23 @@ const ProjectsMain = () => {
     }
     setCreateModal(prev => ({ ...prev, loading: true, error: null }));
     try {
+      // Fetch official exchange rate — fall back to 1200 if it fails
+      let exchangeRate = 1200;
+      try {
+        exchangeRate = await fetchOfficialRate();
+      } catch {
+        // Network error or API down — use default silently
+      }
+
       const newProject = await projectsService?.create({
         name: createModal.name.trim(),
         status: 'presupuestado'
       });
+
       if (newProject) {
+        // Persist the exchange rate in the project row
+        await projectsService?.update(newProject.id, { exchangeRate });
+        setGlobalExchangeRate(exchangeRate);
         setCreateModal({ open: false, name: '', loading: false, error: null });
         navigate(`/project-detail-editor/${newProject?.id}`);
       }
@@ -160,6 +177,48 @@ const ProjectsMain = () => {
       console.error('Status change error:', err);
       setStatusModal(prev => ({ ...prev, loading: false }));
       setError('Error al cambiar el estado');
+    }
+  };
+
+  const handleOpenTcModal = (projectId) => {
+    const project = projects?.find(p => p?.id === projectId);
+    setTcModal({
+      open: true,
+      projectId,
+      projectName: project?.name || '',
+      currentRate: project?.exchange_rate ?? null,
+      newRate: String(project?.exchange_rate ?? ''),
+      fetchLoading: false,
+      saveLoading: false,
+      error: null,
+      fetchError: null,
+    });
+  };
+
+  const handleTcFetchCurrent = async () => {
+    setTcModal(prev => ({ ...prev, fetchLoading: true, fetchError: null }));
+    try {
+      const rate = await fetchOfficialRate();
+      setTcModal(prev => ({ ...prev, fetchLoading: false, newRate: String(rate) }));
+    } catch {
+      setTcModal(prev => ({ ...prev, fetchLoading: false, fetchError: 'No se pudo obtener el valor del dólar. Revisá tu conexión.' }));
+    }
+  };
+
+  const handleTcSave = async () => {
+    const rate = parseFloat(tcModal.newRate);
+    if (!rate || rate <= 0) {
+      setTcModal(prev => ({ ...prev, error: 'Ingresá un valor válido mayor a cero.' }));
+      return;
+    }
+    setTcModal(prev => ({ ...prev, saveLoading: true, error: null }));
+    try {
+      await projectsService?.update(tcModal.projectId, { exchangeRate: rate });
+      setProjects(prev => prev.map(p => p.id === tcModal.projectId ? { ...p, exchange_rate: rate } : p));
+      setGlobalExchangeRate(rate);
+      setTcModal({ open: false, projectId: null, projectName: '', currentRate: null, newRate: '', fetchLoading: false, saveLoading: false, error: null, fetchError: null });
+    } catch {
+      setTcModal(prev => ({ ...prev, saveLoading: false, error: 'Error al guardar. Intentá de nuevo.' }));
     }
   };
 
@@ -295,7 +354,8 @@ const ProjectsMain = () => {
                     client: project?.client,
                     project_type: project?.project_type,
                     createdAt: new Date(project?.created_at),
-                    status: project?.status
+                    status: project?.status,
+                    exchange_rate: project?.exchange_rate ?? null,
                   }}
                   onOpen={handleOpenProject}
                   onEdit={handleEditProject}
@@ -303,6 +363,7 @@ const ProjectsMain = () => {
                   onDelete={handleDeleteProject}
                   onStatusChange={handleStatusChange}
                   onCobranzas={(id) => navigate(`/project-detail-editor/${id}?tab=cobranzas`)}
+                  onExchangeRate={handleOpenTcModal}
                   formatDate={formatDate}
                 />
               ))}
@@ -419,6 +480,100 @@ const ProjectsMain = () => {
             </Button>
             <Button onClick={confirmDuplicateProject} disabled={duplicateModal.loading} iconName={duplicateModal.loading ? 'Loader2' : 'Copy'} className={duplicateModal.loading ? '[&_svg]:animate-spin' : ''}>
               {duplicateModal.loading ? 'Duplicando...' : 'Duplicar'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Tipo de cambio modal */}
+    {tcModal.open && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !tcModal.saveLoading && setTcModal(prev => ({ ...prev, open: false }))} />
+        <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <Icon name="DollarSign" size={20} className="text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg font-heading font-semibold text-foreground">Tipo de cambio</h2>
+              <p className="text-sm text-muted-foreground truncate">{tcModal.projectName}</p>
+            </div>
+          </div>
+
+          {/* Valor actual guardado */}
+          {tcModal.currentRate != null && (
+            <div className="mb-4 p-3 bg-muted/50 rounded-lg flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Valor guardado en este proyecto</span>
+              <span className="text-sm font-bold text-foreground">
+                ${Number(tcModal.currentRate).toLocaleString('es-AR')}
+              </span>
+            </div>
+          )}
+
+          {/* Input nuevo valor */}
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Nuevo valor (ARS por USD)
+            </label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">$</span>
+                <Input
+                  type="number"
+                  value={tcModal.newRate}
+                  onChange={(e) => setTcModal(prev => ({ ...prev, newRate: e.target.value, error: null }))}
+                  placeholder="1200"
+                  min="1"
+                  step="1"
+                  className="pl-7"
+                  disabled={tcModal.saveLoading || tcModal.fetchLoading}
+                />
+              </div>
+              <button
+                onClick={handleTcFetchCurrent}
+                disabled={tcModal.fetchLoading || tcModal.saveLoading}
+                title="Obtener valor oficial actual"
+                className="flex items-center gap-1.5 px-3 h-10 rounded-md border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50 flex-shrink-0"
+              >
+                {tcModal.fetchLoading
+                  ? <Icon name="Loader2" size={15} className="animate-spin" />
+                  : <Icon name="RefreshCw" size={15} />}
+                <span className="hidden sm:inline">Actual</span>
+              </button>
+            </div>
+            {tcModal.fetchLoading && (
+              <p className="text-xs text-muted-foreground mt-1.5">Consultando dólar oficial...</p>
+            )}
+            {tcModal.fetchError && (
+              <p className="text-xs text-error mt-1.5">{tcModal.fetchError}</p>
+            )}
+            {tcModal.error && (
+              <p className="text-xs text-error mt-1.5">{tcModal.error}</p>
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground mb-5">
+            Fuente: Bluelytics · dólar oficial venta
+          </p>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setTcModal(prev => ({ ...prev, open: false }))}
+              disabled={tcModal.saveLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleTcSave}
+              disabled={tcModal.saveLoading || !tcModal.newRate}
+              iconName={tcModal.saveLoading ? 'Loader2' : 'Save'}
+              className={tcModal.saveLoading ? '[&_svg]:animate-spin' : ''}
+            >
+              {tcModal.saveLoading ? 'Guardando...' : 'Guardar'}
             </Button>
           </div>
         </div>

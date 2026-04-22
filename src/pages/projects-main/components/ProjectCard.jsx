@@ -14,7 +14,7 @@ const ALL_STATUSES = ['presupuestado', 'aprobado', 'en_proceso', 'finalizado', '
 
 const HAS_ACCOUNT_STATUSES = ['aprobado', 'en_proceso', 'finalizado'];
 
-const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, onStatusChange, onCobranzas, formatDate }) => {
+const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, onStatusChange, onCobranzas, onExchangeRate, formatDate }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const currentStatus = project?.status || 'active';
@@ -123,11 +123,28 @@ const ProjectCard = ({ project, onOpen, onEdit, onDuplicate, onDelete, onStatusC
               <Icon name="Calendar" size={13} />
               <span>{formatDate(project?.createdAt)}</span>
             </div>
+            {project?.exchange_rate != null && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onExchangeRate(project?.id); }}
+                className="flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition-colors"
+                title="Ver / editar tipo de cambio"
+              >
+                <Icon name="DollarSign" size={11} />
+                ${Number(project.exchange_rate).toLocaleString('es-AR')}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Right: actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); onExchangeRate(project?.id); }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+            title="Tipo de cambio"
+          >
+            <Icon name="DollarSign" size={15} />
+          </button>
           {HAS_ACCOUNT_STATUSES.includes(currentStatus) && (
             <button
               onClick={(e) => { e.stopPropagation(); onCobranzas(project?.id); }}

@@ -6,9 +6,7 @@ import { paymentAccountsService, paymentsService } from '../../services/supabase
 import { generateReceiptPdf } from '../../utils/receiptPdf';
 import AddPaymentModal from '../project-detail-editor/components/AddPaymentModal';
 import DeleteConfirmModal from '../product-management/components/DeleteConfirmModal';
-
-const fmt = (n) =>
-  new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n ?? 0);
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '—';
@@ -34,6 +32,8 @@ const masked = '$ ••••••';
 
 const CobranzasPage = () => {
   const navigate = useNavigate();
+  const { formatAmount } = useCurrency();
+  const fmt = formatAmount;
   const [accounts, setAccounts] = useState([]);
   const [payments, setPayments] = useState({}); // { accountId: [...payments] }
   const [expanded, setExpanded] = useState(null);

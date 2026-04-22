@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { generateBudgetSuggestions } from '../../../services/anthropicService';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const AIBudgetModal = ({ isOpen, onClose, products, onAddItems }) => {
   const [requirements, setRequirements] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [suggestions, setSuggestions] = useState(null);
+  const { formatAmount } = useCurrency();
 
   if (!isOpen) return null;
 
@@ -56,8 +58,7 @@ const AIBudgetModal = ({ isOpen, onClose, products, onAddItems }) => {
     onClose();
   };
 
-  const formatCurrency = (amount) =>
-    new Intl.NumberFormat('es-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
+  const formatCurrency = formatAmount;
 
   const totalEstimado = suggestions?.reduce((sum, s) => sum + (s.product?.final_price || 0) * s.quantity, 0) || 0;
 
