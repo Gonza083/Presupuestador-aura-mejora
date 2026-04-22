@@ -15,9 +15,9 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
     image: null,
     imagePreview: null,
     pdfFile: null,
-    cost: '',
-    labor: '',
-    profit: ''
+    cost: '0',
+    labor: '0',
+    profit: '0'
   });
 
   const [profitMode, setProfitMode] = useState('amount');
@@ -105,7 +105,7 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
       await productsService?.create({
         categoryId: formData?.category,
         name: formData?.name,
-        code: formData?.code,
+        code: formData?.code || null,
         description: formData?.description || null,
         image: imageUrl,
         alt: `${formData?.name} product image`,
@@ -127,9 +127,9 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
         image: null,
         imagePreview: null,
         pdfFile: null,
-        cost: '',
-        labor: '',
-        profit: ''
+        cost: '0',
+        labor: '0',
+        profit: '0'
       });
       
       // Notify parent and close
@@ -215,7 +215,7 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Categoría *
+                  Categoría
                 </label>
                 <Select
                   options={categoryOptions}
@@ -390,7 +390,7 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Costo del producto *
+                  Costo del producto
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -403,14 +403,13 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
                     min="0"
                     step="0.01"
                     className="pl-7"
-                    required
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Costo de mano de obra *
+                  Costo de mano de obra
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -423,14 +422,13 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
                     min="0"
                     step="0.01"
                     className="pl-7"
-                    required
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-medium text-foreground">Ganancia *</label>
+                  <label className="text-sm font-medium text-foreground">Ganancia</label>
                   <div className="flex rounded-lg border border-border overflow-hidden text-xs">
                     <button
                       type="button"
@@ -461,7 +459,6 @@ const AddProductModal = ({ isOpen, onClose, allCategories, categoryId, onSuccess
                     min="0"
                     step="0.01"
                     className="pl-7"
-                    required
                   />
                 </div>
                 {profitMode === 'percent' && formData?.profit && (

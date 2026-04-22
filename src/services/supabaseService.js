@@ -265,7 +265,7 @@ export const productsService = {
         user_id: user?.id,
         category_id: productData?.categoryId,
         name: productData?.name,
-        code: productData?.code,
+        code: productData?.code || `PROD-${Date.now()}`,
         description: productData?.description || null,
         image: productData?.image || null,
         alt: productData?.alt || null,
