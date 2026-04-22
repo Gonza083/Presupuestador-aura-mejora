@@ -560,12 +560,9 @@ export const projectsService = {
       if (updates?.endDate !== undefined) dbUpdates.end_date = updates?.endDate;
       if (updates?.exchangeRate !== undefined) dbUpdates.exchange_rate = updates?.exchangeRate;
 
-      // subtotal, discount, total temporarily removed until schema migration is verified
-      /*
       if (updates?.subtotal !== undefined) dbUpdates.subtotal = updates?.subtotal;
       if (updates?.discount !== undefined) dbUpdates.discount = updates?.discount;
       if (updates?.total !== undefined) dbUpdates.total = updates?.total;
-      */
 
       // If no valid updates, return early to avoid Supabase error
       if (Object.keys(dbUpdates).length === 0) {
