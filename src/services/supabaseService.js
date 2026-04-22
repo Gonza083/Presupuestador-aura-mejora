@@ -1356,7 +1356,7 @@ export const paymentAccountsService = {
       const user = await getAuthenticatedUser();
       const { data, error } = await supabase
         ?.from('payment_accounts')
-        ?.select(`*, projects(id, name, client, status)`)
+        ?.select(`*, projects(id, name, client, status, exchange_rate, discount, subtotal, total)`)
         ?.eq('user_id', user?.id)
         ?.is('deleted_at', null)
         ?.order('created_at', { ascending: false });

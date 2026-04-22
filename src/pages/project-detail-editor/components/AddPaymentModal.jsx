@@ -180,7 +180,7 @@ const AddPaymentModal = ({ isOpen, onClose, onConfirm, maxAmount, loading }) => 
                   <span className="text-foreground">
                     Dólar oficial (venta): <strong>{fmtARS(exchangeRate)}</strong>
                   </span>
-                  <button onClick={fetchExchangeRate} className="ml-auto text-xs text-accent hover:underline flex-shrink-0">
+                  <button onClick={fetchExchangeRateLocal} className="ml-auto text-xs text-accent hover:underline flex-shrink-0">
                     Actualizar
                   </button>
                 </>
